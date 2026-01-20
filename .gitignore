@@ -49,3 +49,8 @@ Thumbs.db
 __pycache__/
 *.pyc
 
+# ========================
+# Data files (csv, xlsx)
+# ========================
+
+*.csv
