@@ -13,7 +13,7 @@ function [blinkOnset, blinkOffset] = create_blink_fixation(blinkFixDur, params)
 
     % Find center
     [xCenter, yCenter] = RectCenter(Screen('Rect', win));
-    dotRect = CenterRectOnPointd([0 0 dotSizePx dotSizePx], xCenter, yCenter);
+    dotRect = CenterRectOnPointd([0 0 params.FIX_SIZE_PX params.FIX_SIZE_PX], xCenter, yCenter);
 
     % Timing: 3 blinks => 3 ON pulses. Use equal ON/OFF inside total duration.
     nBlinks = 3;

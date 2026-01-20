@@ -15,7 +15,8 @@ setup_env;  % must cre    ate `params`
 if isfield(params, 'kbdDeviceIndex')
     deviceIndex = params.kbdDeviceIndex;
 else
-    deviceIndex = [];  % let PTB choose default keyboard
+    deviceIndex = [];
+    params.kbdDeviceIndex = deviceIndex;  
 end
 
 queueCreated = false;
@@ -49,25 +50,38 @@ try
     queueCreated = true;
     KbQueueStart(deviceIndex);
     KbQueueFlush(deviceIndex);  % flush right after start
-
+    
+    KbName('UnifyKeyNames');
+    spaceKey = KbName('Space');
+    escKey   = KbName('ESCAPE');
     %% load trials
     for i = 1:height(trials_df_shuff)
         [row,params] = load_trial(i, trials_df_shuff(i,:), params);
-        trials_df_shuff(i,:) = row;
+%         trials_df_shuff(i,:) = row;
 
-        % Clear any buffered keypresses BEFORE waiting
-        KbQueueFlush(deviceIndex);
+        KbQueueFlush(deviceIndex);   % flush BEFORE waiting
+        
+        while params.BLOCK_TRIAL
+            [pressed, firstPress] = KbQueueCheck(deviceIndex);
 
+            if pressed
+                if firstPress(escKey) > 0
+                    error('UserAbort:ESC', 'Experiment aborted by user');
+                elseif firstPress(spaceKey) > 0
+                    break;
+                end
+            end
+
+            WaitSecs(0.001);  % avoid 100% CPU
+        end
+        
+        WaitSecs(0.001); %   avoid 100% CPU
         
         [pressed, firstPress] = KbQueueCheck(deviceIndex);
-        if pressed
 
-            if firstPress(KbName('ESCAPE'))
-                error('UserAbort:ESC', 'Experiment aborted by user');
-            end
-        end
-        WaitSecs(0.001); % tiny sleep so you don't peg CPU at 100%
-        
+        if firstPress(escKey) > 0
+            error('UserAbort:ESC', 'Experiment aborted by user');
+        end 
     end
 
     %% normal cleanup

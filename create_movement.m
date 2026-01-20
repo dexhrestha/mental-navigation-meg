@@ -20,9 +20,7 @@ function [movementOnset, movementOffset, userInput, params] = create_movement(mo
     red = [255 0 0];
 
     userInput = -1;
-
-    rectWidthPx  = 50;
-    rectHeightPx = 50;
+ 
     dotSizePx    = 12;
 
     [xCenter, yCenter] = RectCenter(Screen('Rect', win));
@@ -77,7 +75,7 @@ function [movementOnset, movementOffset, userInput, params] = create_movement(mo
             xPos = xCenter + currPos(k);
             yPos = yCenter - params.START_Y_PX;
 
-            dstRect = CenterRectOnPointd([0 0 rectWidthPx rectHeightPx], xPos, yPos);
+            dstRect = CenterRectOnPointd([0 0 params.LM_WIDTH params.LM_HEIGHT], xPos, yPos);
 
             currImgId = params.trial.imgArrShifted(k);
             currCatImgId = mod(currImgId - 1, 3) + 1;
@@ -104,10 +102,15 @@ function [movementOnset, movementOffset, userInput, params] = create_movement(mo
             elseif keyCode(KbName('SPACE'))
                 userInput = GetSecs;
                 movementOffset = userInput;
+                % Store final image x-positions
+                params.trial.imgArrPos = currPos;
                 return;
             end
         end
     end
 
     movementOffset = GetSecs;
+    % Store final image x-positions
+    params.trial.imgArrPos = currPos;
+
 end

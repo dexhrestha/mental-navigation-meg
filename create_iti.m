@@ -1,4 +1,4 @@
-function params = create_iti(itiDur, params)
+function [itiOnset,itiOffset,params] = create_iti(itiDur, params)
 % CREATE_ITI
 % Shows a blank screen (background color) for itiDur milliseconds.
 
@@ -16,5 +16,5 @@ function params = create_iti(itiDur, params)
     itiOnset = Screen('Flip', win);
 
     % Hold for ITI duration (precise)
-    WaitSecs('UntilTime', itiOnset + itiDur);
+    itiOffset = WaitSecs('UntilTime', itiOnset + itiDur);
 end
