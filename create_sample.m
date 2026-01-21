@@ -17,8 +17,7 @@ function [sampleOnset, sampleOffset, params] = create_sample(sampleDur, startCat
 
     %% Convert duration to seconds
     sampleDur = sampleDur / 1000;  % ms -> s
-    sampleDur = 3;
-    %% --------------------------------------------------------------------
+     %% --------------------------------------------------------------------
     % Build ordered image ID array and shift so startId is at the center
     %% --------------------------------------------------------------------
     imgArr = 1:18;
