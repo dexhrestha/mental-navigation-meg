@@ -1,4 +1,4 @@
-function [sampleOnset, sampleOffset, params] = create_sample(sampleDur, startCat, startId, targetCat, targetId, params)
+function [sampleOnset, sampleOffset, params] = create_sample(sampleDur, startCat,startCatPos, startId, targetCat,targetCatPos, targetId, params)
 % CREATE_SAMPLE
 % Displays a row of images centered around the start image, plus a target image
 % and a fixation dot. All stimuli are shown for sampleDur milliseconds.
@@ -17,7 +17,7 @@ function [sampleOnset, sampleOffset, params] = create_sample(sampleDur, startCat
 
     %% Convert duration to seconds
     sampleDur = sampleDur / 1000;  % ms -> s
-
+    sampleDur = 3;
     %% --------------------------------------------------------------------
     % Build ordered image ID array and shift so startId is at the center
     %% --------------------------------------------------------------------
@@ -53,10 +53,9 @@ function [sampleOnset, sampleOffset, params] = create_sample(sampleDur, startCat
     %% --------------------------------------------------------------------
     % Determine target image texture (category + image-within-category)
     %% --------------------------------------------------------------------
-    targetCatImgId = mod(targetId - 1, 3) + 1;
-    fprintf('%d %d %d \n ', targetCat, targetId, targetCatImgId);
+%     targetCatImgId = mod(targetId - 1, 3) + 1;
 
-    params.trial.targetTex = params.tex{targetCat, targetCatImgId};
+    params.trial.targetTex = params.tex{targetCat, targetCatPos};
 
     %% --------------------------------------------------------------------
     % Layout parameters

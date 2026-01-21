@@ -87,7 +87,7 @@ function [movementOnset, movementOffset, userInput, params] = create_movement(mo
 
         % Target + fixation
         Screen('DrawTexture', win, params.trial.targetTex, [], params.trial.targetRect);
-        dotRect = CenterRectOnPointd([0 0 dotSizePx dotSizePx], xCenter, yCenter);
+        dotRect = CenterRectOnPointd([0 0 params.FIX_SIZE_PX params.FIX_SIZE_PX], xCenter, yCenter);
         Screen('FillOval', win, red, dotRect);
 
         % --- synced flip ---

@@ -1,4 +1,4 @@
-function [probeOnset, probeOffset, probeResp, params] = create_probe(probeId, params)
+function [probeOnset, probeOffset, probeResp, params] = create_probe(probeCat,probeCatId,probeLoc,optionCat, params)
 
     win = params.window;
     bg  = params.BG_COLOR;
@@ -12,20 +12,25 @@ function [probeOnset, probeOffset, probeResp, params] = create_probe(probeId, pa
 
     [xCenter, yCenter] = RectCenter(Screen('Rect', win));
 
-    probeId    = 5;
-    probeCat   = probeId - 3 ; % calculate from probeId
-    probeCatId = 2;
- 
 
-    optionCat   = 1;
+    optionCat   = probeCat+optionCat;
     optionCatId = 2;
-
+    % if probeLoc is 1 set correctto right 
+    if probeLoc == 1
+        correct_xCenter = xCenter - params.CORRECT_OFFEST_X;
+        incorrect_xCenter = xCenter + params.INCORRECT_OFFEST_X;
+    % if probeLoc is -1 set correct to left
+    else 
+        correct_xCenter = xCenter + params.CORRECT_OFFEST_X;
+        incorrect_xCenter = xCenter - params.INCORRECT_OFFEST_X;
+    end
+    
     correctRect   = CenterRectOnPointd([0 0 params.LM_WIDTH params.LM_HEIGHT], ...
-        xCenter - params.CORRECT_OFFEST_X, yCenter);
+        correct_xCenter, yCenter);
     correctTex    = params.tex{probeCat, probeCatId};
 
     incorrectRect = CenterRectOnPointd([0 0 params.LM_WIDTH params.LM_HEIGHT], ...
-        xCenter + params.INCORRECT_OFFEST_X, yCenter);
+        incorrect_xCenter, yCenter);
     incorrectTex  = params.tex{optionCat, optionCatId};
 
     % Draw probe

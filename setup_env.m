@@ -1,8 +1,11 @@
 % Trial Phases Wait Times in Sec
+params.SPEED_CUE_DUR = .25;
 params.BLINK_FIX = 1;
 params.TEXT_COLOR =  uint8([255 255 255]);           % also fine (double)
+params.SPEED_CUE_LOOPS = 1;
 
 % read images categories
+params.N_IMAGES = 18;
 params.categories = {
     'birds'
     'docile'
@@ -26,7 +29,7 @@ params.INCORRECT_OFFEST_X = 200;
 % participant variables
 params.participant.name = '001';
 params.participant.session = 1;
-params.participant.direction = 1 ; % -1 for left | +1 for right
+% params.participant.direction = -1 ; % -1 for left | +1 for right
 
 % DEVELOPER variables
 params.DEV_MODE = true;

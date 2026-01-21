@@ -1,13 +1,14 @@
 close all;
 clear;
 
-load('trial_structure_input.mat','trials_df');
-trials_df_shuff = create_trial_structure(trials_df);
- 
-% trials_df_shuff = trials_df_shuff(1:5, :);
+%% read trial structure  csv and convert to mat file
+% Read CSV into a table
+trials_df = readtable('trial_structure_input_left.csv');
 
-trials_df_shuff = initialize_trials(trials_df_shuff);
+% Save to .mat file
+save('trial_structure_input.mat', 'trials_df');
 
+%% Setup Environment and Keyboard Input
 setup_env;  % must cre    ate `params`
 
 % Choose keyboard device ONCE and use it everywhere
@@ -21,6 +22,16 @@ end
 
 queueCreated = false;
 
+%% Load trial structure mat file 
+load('trial_structure_input.mat','trials_df');
+trials_df_shuff = create_trial_structure(trials_df);
+ 
+% trials_df_shuff = trials_df_shuff(1:5, :);
+
+trials_df_shuff = initialize_trials(trials_df_shuff);
+params.participant.direction = trials_df.direction(1) * -1 ; 
+
+%% Load trials using PTB
 try
     %% setup screen and textures
     params = setup_psychtbx(params);
