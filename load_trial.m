@@ -7,7 +7,7 @@ function [row,params] = load_trial(i,row,params)
     end
     
     [row.blinkFixOnset,row.blinkFixOffset] = create_blink_fixation(row.blinkFixDur(1),params);
-    
+  
     
     if row.feedbackDur(1) > 0
         [row.sampleOnset,row.sampleOffset,params] = create_sample(row.sampleDur(1),row.startCat(1),row.startCatPos(1),row.startId(1),row.targetCat(1),row.targetCatPos(1),row.targetId(1),params);

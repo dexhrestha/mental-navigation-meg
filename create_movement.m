@@ -7,7 +7,7 @@ function [movementOnset, movementOffset, userInput, params] = create_movement(sp
     end
     if nargin < 4 || isempty(vbl0)
         % Fallback, but this can cause blink if no frame was drawn:
-        vbl0 = Screen('Flip', params.window, [], 1);
+        vbl0 = Screen('Flip', params.ptb.window, [], 1);
     end
 
     if isempty(movementDur) || ~isscalar(movementDur) || movementDur < 0
@@ -15,8 +15,8 @@ function [movementOnset, movementOffset, userInput, params] = create_movement(sp
     end
 
     movementDur = movementDur / 1000;  % ms -> s
-    win = params.window;
-    bg  = params.BG_COLOR;
+    win = params.ptb.window;
+    bg  = params.ptb.BG_COLOR;
     red = [255 0 0];
 
     userInput = -1;
@@ -30,9 +30,9 @@ function [movementOnset, movementOffset, userInput, params] = create_movement(sp
     % speed = 2 means move 2 images in 1 second
     % so this function should also take speed of the movment in terms of
     % distance_px_per_second
-    % speed = 2 in distance_px_per_second is = 2 * params.LM_WIDTH * 2
+    % speed = 2 in distance_px_per_second is = 2 * params.LM_WIDTH_PX * 2
     
-    speedPxPerSec = speed * params.LM_WIDTH*2;
+    speedPxPerSec = speed * (params.LM_WIDTH_PX + params.ILD_PX);
     ifi = Screen('GetFlipInterval', win);
     dxPerFrame = speedPxPerSec * ifi;
 
@@ -42,7 +42,7 @@ function [movementOnset, movementOffset, userInput, params] = create_movement(sp
     spacingPx = median(diff(baseSorted));
     
     if ~isfinite(spacingPx) || spacingPx <= 0
-        spacingPx = params.LM_WIDTH*2; % fallback
+        spacingPx = params.LM_WIDTH_PX*2; % fallback
     end
 
     offsetPx = 0;  % smooth sub-slot offset
@@ -91,7 +91,7 @@ function [movementOnset, movementOffset, userInput, params] = create_movement(sp
             xPos = xCenter + currPos(k);
             yPos = yCenter - params.START_Y_PX;
 
-            dstRect = CenterRectOnPointd([0 0 params.LM_WIDTH params.LM_HEIGHT], xPos, yPos);
+            dstRect = CenterRectOnPointd([0 0 params.LM_WIDTH_PX params.LM_HEIGHT_PX], xPos, yPos);
 
             currImgId = params.trial.imgArrShifted(k);
             currCatImgId = mod(currImgId - 1, 3) + 1;

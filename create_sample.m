@@ -37,7 +37,7 @@ function [sampleOnset, sampleOffset, params] = create_sample(sampleDur, startCat
     % Compute X positions relative to screen center
     % Values are symmetric around 0 and spaced by 100 px
     %% --------------------------------------------------------------------
-    params.trial.imgArrPos = ((1:N) - centerIdx) * (50 + 50);
+    params.trial.imgArrPos = ((1:N) - centerIdx) * (params.LM_WIDTH_PX +   params.ILD_PX);
 
     n = numel(params.trial.imgArrPos);
     params.trial.rects = cell(1, n);   % store destination params.trial.rects for all images
@@ -45,8 +45,8 @@ function [sampleOnset, sampleOffset, params] = create_sample(sampleDur, startCat
     %% --------------------------------------------------------------------
     % PTB handles and colors
     %% --------------------------------------------------------------------
-    win = params.window;
-    bg  = params.BG_COLOR;
+    win = params.ptb.window;
+    bg  = params.ptb.BG_COLOR;
     red = [255 0 0];
 
     %% --------------------------------------------------------------------
@@ -64,7 +64,7 @@ function [sampleOnset, sampleOffset, params] = create_sample(sampleDur, startCat
 
     % Target image is drawn below the row
     params.trial.targetRect = CenterRectOnPointd( ...
-        [0 0 params.LM_WIDTH params.LM_HEIGHT], ...
+        [0 0 params.LM_WIDTH_PX params.LM_HEIGHT_PX], ...
         xCenter, yCenter + params.TARGET_Y_PX ...
     );
 
@@ -80,7 +80,7 @@ function [sampleOnset, sampleOffset, params] = create_sample(sampleDur, startCat
 
         % Destination rect for this image
         params.trial.rects{k} = CenterRectOnPointd( ...
-            [0 0 params.LM_WIDTH params.LM_HEIGHT], ...
+            [0 0 params.LM_WIDTH_PX params.LM_HEIGHT_PX], ...
             xPos, yPos ...
         );
 

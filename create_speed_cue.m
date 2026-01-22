@@ -1,8 +1,8 @@
 function [speedCueOnset,speedCueOffset] = create_speed_cue(speed,params)
     speedCueDur = params.SPEED_CUE_DUR;
     
-    win   = params.window;
-    bg  = params.BG_COLOR;
+    win = params.ptb.window;
+    bg  = params.ptb.BG_COLOR;
     red = [255 0 0];
 
     color = params.TEXT_COLOR;        
@@ -29,7 +29,7 @@ function [speedCueOnset,speedCueOffset] = create_speed_cue(speed,params)
     % Compute X positions relative to screen center
     % Values are symmetric around 0 and spaced by 100 px
     %% --------------------------------------------------------------------
-    params.trial.imgArrPos = ((1:N) - centerIdx) * (50 + 50);
+    params.trial.imgArrPos = ((1:N) - centerIdx) * (params.LM_WIDTH_PX +   params.ILD_PX);
     
     [xCenter, yCenter] = RectCenter(Screen('Rect', win));
     
@@ -37,7 +37,7 @@ function [speedCueOnset,speedCueOffset] = create_speed_cue(speed,params)
     
     
     % --- motion control: EXACTLY 100 px in 1 second ---
-    speedPxPerSec = speed * params.LM_WIDTH*2;
+    speedPxPerSec = speed * (params.LM_WIDTH_PX + params.ILD_PX);
     ifi = Screen('GetFlipInterval', win);
     dxPerFrame = speedPxPerSec * ifi;
 
@@ -46,7 +46,7 @@ function [speedCueOnset,speedCueOffset] = create_speed_cue(speed,params)
     baseSorted = sort(basePos);
     spacingPx = median(diff(baseSorted));
     if ~isfinite(spacingPx) || spacingPx <= 0
-        spacingPx = params.LM_WIDTH*2; % fallback
+        spacingPx = params.LM_WIDTH_PX*2; % fallback
     end
     
     offsetPx = 0;
@@ -94,7 +94,7 @@ function [speedCueOnset,speedCueOffset] = create_speed_cue(speed,params)
             xPos = xCenter + currPos(k);
             yPos = yCenter - params.START_Y_PX;
 
-            dstRect = CenterRectOnPointd([0 0 params.LM_WIDTH params.LM_HEIGHT], xPos, yPos);
+            dstRect = CenterRectOnPointd([0 0 params.LM_WIDTH_PX params.LM_HEIGHT_PX], xPos, yPos);
 
             currImgId = params.trial.imgArrShifted(k);
             currCatImgId = mod(currImgId - 1, 3) + 1;

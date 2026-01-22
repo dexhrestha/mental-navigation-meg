@@ -1,7 +1,7 @@
 function params = create_goodbye_screen(params)
  
-    win = params.window;
-    bg  = params.BG_COLOR;
+    win = params.ptb.window;
+    bg  = params.ptb.BG_COLOR;
 
     % Use the SAME keyboard device as the rest of the experiment
     if isfield(params,'kbdDeviceIndex')
@@ -24,7 +24,7 @@ function params = create_goodbye_screen(params)
     if isfield(params,'TEXT_COLOR')
         txtColor = params.TEXT_COLOR;
     else
-        txtColor = [255 255 255];
+       txtColor = params.ptb.FG_COLOR;
     end
 
     DrawFormattedText(win, welcome_text, 'center', 'center', txtColor);

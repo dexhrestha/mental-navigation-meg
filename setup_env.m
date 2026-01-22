@@ -15,25 +15,84 @@ params.categories = {
     'rep_amp'
 };
 
-% screen positions in px 
-params.START_Y_PX = 50+25;
-params.TARGET_Y_PX = 50+25;
-params.ILD_PX = 50;
-params.LM_HEIGHT = 50;
-params.LM_WIDTH = 50;
-params.FIX_SIZE_PX    = 12;
 
-params.SPEED_CUE_OFFSET_PX = 150;
-
-params.CORRECT_OFFEST_X = 200;
-params.INCORRECT_OFFEST_X = 200;
- 
-% participant variables
-params.participant.name = '001';
-params.participant.session = 1;
-% params.participant.direction = -1 ; % -1 for left | +1 for right
-
+% screen positions in deg 
 % DEVELOPER variables
 params.DEV_MODE = true;
 params.BLOCK_TRIAL = false;
+
+%  LETTERS
+params.FONT_FAMILY = 'Courier New';
+params.FONT_SIZE = 250;
+
+
+% STIMULUS SIZES
+if params.DEV_MODE
+    params.START_Y_DEG          = 1.2;
+    params.TARGET_Y_DEG         = 1.2;
+    params.ILD_DEG              = 1.2;
+
+    params.LM_HEIGHT_DEG        = 1.2;
+    params.LM_WIDTH_DEG         = 1.2;
+
+    params.FIX_SIZE_DEG         = 0.1;
+
+    params.SPEED_CUE_OFFSET_DEG = 3.0;
+
+    params.CORRECT_OFFSET_DEG   = 2.0;
+    params.INCORRECT_OFFSET_DEG = 2.0;
+    
+    
+else 
+    params.START_Y_DEG          = 2.0;
+    params.TARGET_Y_DEG         = 2.0;
+    params.ILD_DEG              = 2.0;
+
+    params.LM_HEIGHT_DEG        = 2.0;
+    params.LM_WIDTH_DEG         = 2.0;
+
+    params.FIX_SIZE_DEG         = 0.2;
+
+    params.SPEED_CUE_OFFSET_DEG = 4.0;
+
+    params.CORRECT_OFFSET_DEG   = 4.0;
+    params.INCORRECT_OFFSET_DEG = 4.0;
+end 
+
+% SCREEN SETTINGS
+
+params.screenWidthCm =  28.5; %28.5;
+
+params.screenWidthPx = 1920;
+
+params.viewingDistCm = 75;
+
+params.START_Y_PX = deg2px(params.START_Y_DEG, ...
+    params.screenWidthCm, params.screenWidthPx, params.viewingDistCm);
+
+params.TARGET_Y_PX = deg2px(params.TARGET_Y_DEG, ...
+    params.screenWidthCm, params.screenWidthPx, params.viewingDistCm);
+
+params.ILD_PX = deg2px(params.ILD_DEG, ...
+    params.screenWidthCm, params.screenWidthPx, params.viewingDistCm);
+
+params.LM_HEIGHT_PX = deg2px(params.LM_HEIGHT_DEG, ...
+    params.screenWidthCm, params.screenWidthPx, params.viewingDistCm);
+
+params.LM_WIDTH_PX = deg2px(params.LM_WIDTH_DEG, ...
+    params.screenWidthCm, params.screenWidthPx, params.viewingDistCm);
+
+params.FIX_SIZE_PX = deg2px(params.FIX_SIZE_DEG, ...
+    params.screenWidthCm, params.screenWidthPx, params.viewingDistCm);
+
+params.SPEED_CUE_OFFSET_PX = deg2px(params.SPEED_CUE_OFFSET_DEG, ...
+    params.screenWidthCm, params.screenWidthPx, params.viewingDistCm);
+
+params.CORRECT_OFFSET_PX = deg2px(params.CORRECT_OFFSET_DEG, ...
+    params.screenWidthCm, params.screenWidthPx, params.viewingDistCm);
+
+params.INCORRECT_OFFSET_PX = deg2px(params.INCORRECT_OFFSET_DEG, ...
+    params.screenWidthCm, params.screenWidthPx, params.viewingDistCm);
+
+
 
