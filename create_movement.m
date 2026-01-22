@@ -1,11 +1,11 @@
-function [movementOnset, movementOffset, userInput, params] = create_movement(movementDur, params, vbl0)
+function [movementOnset, movementOffset, userInput, params] = create_movement(speed,movementDur, params, vbl0)
 % True carousel: smooth motion + rotate IDs when passing one slot spacing.
 % movementDur in ms. vbl0 is timestamp from previous Screen('Flip').
 
     if nargin < 2
         error('Need movementDur and params.');
     end
-    if nargin < 3 || isempty(vbl0)
+    if nargin < 4 || isempty(vbl0)
         % Fallback, but this can cause blink if no frame was drawn:
         vbl0 = Screen('Flip', params.window, [], 1);
     end
@@ -21,16 +21,18 @@ function [movementOnset, movementOffset, userInput, params] = create_movement(mo
 
     userInput = -1;
 
-    rectWidthPx  = 50;
-    rectHeightPx = 50;
-    dotSizePx    = 12;
-
     [xCenter, yCenter] = RectCenter(Screen('Rect', win));
 
     n = numel(params.trial.imgArrPos);
 
     % --- motion control: EXACTLY 100 px in 1 second ---
-    speedPxPerSec = 100;
+    
+    % speed = 2 means move 2 images in 1 second
+    % so this function should also take speed of the movment in terms of
+    % distance_px_per_second
+    % speed = 2 in distance_px_per_second is = 2 * params.LM_WIDTH * 2
+    
+    speedPxPerSec = speed * params.LM_WIDTH*2;
     ifi = Screen('GetFlipInterval', win);
     dxPerFrame = speedPxPerSec * ifi;
 
@@ -38,23 +40,35 @@ function [movementOnset, movementOffset, userInput, params] = create_movement(mo
     basePos = params.trial.imgArrPos(:)';      % row vector
     baseSorted = sort(basePos);
     spacingPx = median(diff(baseSorted));
+    
     if ~isfinite(spacingPx) || spacingPx <= 0
-        spacingPx = 100; % fallback
+        spacingPx = params.LM_WIDTH*2; % fallback
     end
 
     offsetPx = 0;  % smooth sub-slot offset
 
-    movementOnset = vbl0;
+    movementOnset = GetSecs;
+    %movementDur = 1; % test  using one second
+    
+
     endT = movementOnset + movementDur;
     vbl = vbl0;
 
     KbReleaseWait;
-
+    fprintf("movementOnset %g \n  movementDur %g \n endT %g \n",movementOnset,movementDur,endT);
+%     lastPrintedSec = -1 ;
     while true
         if vbl >= endT
             break;
         end
 
+        %         elapsedSec = floor(GetSecs - movementOnset);
+% 
+%         if elapsedSec > lastPrintedSec
+%             fprintf('%d sec\n', elapsedSec);
+%             lastPrintedSec = elapsedSec;
+%         end
+%         
         % --- update smooth offset ---
         offsetPx = offsetPx + dxPerFrame * params.participant.direction;
 
@@ -77,7 +91,7 @@ function [movementOnset, movementOffset, userInput, params] = create_movement(mo
             xPos = xCenter + currPos(k);
             yPos = yCenter - params.START_Y_PX;
 
-            dstRect = CenterRectOnPointd([0 0 rectWidthPx rectHeightPx], xPos, yPos);
+            dstRect = CenterRectOnPointd([0 0 params.LM_WIDTH params.LM_HEIGHT], xPos, yPos);
 
             currImgId = params.trial.imgArrShifted(k);
             currCatImgId = mod(currImgId - 1, 3) + 1;
@@ -89,7 +103,7 @@ function [movementOnset, movementOffset, userInput, params] = create_movement(mo
 
         % Target + fixation
         Screen('DrawTexture', win, params.trial.targetTex, [], params.trial.targetRect);
-        dotRect = CenterRectOnPointd([0 0 dotSizePx dotSizePx], xCenter, yCenter);
+        dotRect = CenterRectOnPointd([0 0 params.FIX_SIZE_PX params.FIX_SIZE_PX], xCenter, yCenter);
         Screen('FillOval', win, red, dotRect);
 
         % --- synced flip ---
@@ -104,10 +118,18 @@ function [movementOnset, movementOffset, userInput, params] = create_movement(mo
             elseif keyCode(KbName('SPACE'))
                 userInput = GetSecs;
                 movementOffset = userInput;
+                % Store final image x-positions
+                params.trial.imgArrPos = currPos;
                 return;
             end
         end
     end
 
     movementOffset = GetSecs;
+    
+    fprintf('movementOffset %g ',movementOffset)
+    
+    % Store final image x-positions
+    params.trial.imgArrPos = currPos;
+
 end

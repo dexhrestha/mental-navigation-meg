@@ -1,13 +1,14 @@
 close all;
 clear;
 
-load('trial_structure_input.mat','trials_df');
-trials_df_shuff = create_trial_structure(trials_df);
- 
-% trials_df_shuff = trials_df_shuff(1:5, :);
+%% read trial structure  csv and convert to mat file
+% Read CSV into a table
+trials_df = readtable('trial_structure_input_right.csv');
 
-trials_df_shuff = initialize_trials(trials_df_shuff);
+% Save to .mat file
+save('trial_structure_input.mat', 'trials_df');
 
+%% Setup Environment and Keyboard Input
 setup_env;  % must cre    ate `params`
 
 % Choose keyboard device ONCE and use it everywhere
@@ -15,11 +16,22 @@ setup_env;  % must cre    ate `params`
 if isfield(params, 'kbdDeviceIndex')
     deviceIndex = params.kbdDeviceIndex;
 else
-    deviceIndex = [];  % let PTB choose default keyboard
+    deviceIndex = [];
+    params.kbdDeviceIndex = deviceIndex;  
 end
 
 queueCreated = false;
 
+%% Load trial structure mat file 
+load('trial_structure_input.mat','trials_df');
+trials_df_shuff = create_trial_structure(trials_df);
+ 
+% trials_df_shuff = trials_df_shuff(1:5, :);
+
+trials_df_shuff = initialize_trials(trials_df_shuff);
+params.participant.direction = trials_df.direction(1) * -1 ; 
+
+%% Load trials using PTB
 try
     %% setup screen and textures
     params = setup_psychtbx(params);
@@ -49,25 +61,38 @@ try
     queueCreated = true;
     KbQueueStart(deviceIndex);
     KbQueueFlush(deviceIndex);  % flush right after start
-
+    
+    KbName('UnifyKeyNames');
+    spaceKey = KbName('Space');
+    escKey   = KbName('ESCAPE');
     %% load trials
     for i = 1:height(trials_df_shuff)
         [row,params] = load_trial(i, trials_df_shuff(i,:), params);
-        trials_df_shuff(i,:) = row;
+%         trials_df_shuff(i,:) = row;
 
-        % Clear any buffered keypresses BEFORE waiting
-        KbQueueFlush(deviceIndex);
+        KbQueueFlush(deviceIndex);   % flush BEFORE waiting
+        
+        while params.BLOCK_TRIAL
+            [pressed, firstPress] = KbQueueCheck(deviceIndex);
 
+            if pressed
+                if firstPress(escKey) > 0
+                    error('UserAbort:ESC', 'Experiment aborted by user');
+                elseif firstPress(spaceKey) > 0
+                    break;
+                end
+            end
+
+            WaitSecs(0.001);  % avoid 100% CPU
+        end
+        
+        WaitSecs(0.001); %   avoid 100% CPU
         
         [pressed, firstPress] = KbQueueCheck(deviceIndex);
-        if pressed
 
-            if firstPress(KbName('ESCAPE'))
-                error('UserAbort:ESC', 'Experiment aborted by user');
-            end
-        end
-        WaitSecs(0.001); % tiny sleep so you don't peg CPU at 100%
-        
+        if firstPress(escKey) > 0
+            error('UserAbort:ESC', 'Experiment aborted by user');
+        end 
     end
 
     %% normal cleanup

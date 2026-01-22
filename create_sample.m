@@ -1,4 +1,4 @@
-function [sampleOnset, sampleOffset, params] = create_sample(sampleDur, startCat, startId, targetCat, targetId, params)
+function [sampleOnset, sampleOffset, params] = create_sample(sampleDur, startCat,startCatPos, startId, targetCat,targetCatPos, targetId, params)
 % CREATE_SAMPLE
 % Displays a row of images centered around the start image, plus a target image
 % and a fixation dot. All stimuli are shown for sampleDur milliseconds.
@@ -17,8 +17,7 @@ function [sampleOnset, sampleOffset, params] = create_sample(sampleDur, startCat
 
     %% Convert duration to seconds
     sampleDur = sampleDur / 1000;  % ms -> s
-
-    %% --------------------------------------------------------------------
+     %% --------------------------------------------------------------------
     % Build ordered image ID array and shift so startId is at the center
     %% --------------------------------------------------------------------
     imgArr = 1:18;
@@ -53,23 +52,19 @@ function [sampleOnset, sampleOffset, params] = create_sample(sampleDur, startCat
     %% --------------------------------------------------------------------
     % Determine target image texture (category + image-within-category)
     %% --------------------------------------------------------------------
-    targetCatImgId = mod(targetId - 1, 3) + 1;
-    fprintf('%d %d %d \n ', targetCat, targetId, targetCatImgId);
+%     targetCatImgId = mod(targetId - 1, 3) + 1;
 
-    params.trial.targetTex = params.tex{targetCat, targetCatImgId};
+    params.trial.targetTex = params.tex{targetCat, targetCatPos};
 
     %% --------------------------------------------------------------------
     % Layout parameters
     %% --------------------------------------------------------------------
-    rectWidthPx  = 50;
-    rectHeightPx = 50;
-    dotSizePx    = 12;
 
     [xCenter, yCenter] = RectCenter(Screen('Rect', win));
 
     % Target image is drawn below the row
     params.trial.targetRect = CenterRectOnPointd( ...
-        [0 0 rectWidthPx rectHeightPx], ...
+        [0 0 params.LM_WIDTH params.LM_HEIGHT], ...
         xCenter, yCenter + params.TARGET_Y_PX ...
     );
 
@@ -85,7 +80,7 @@ function [sampleOnset, sampleOffset, params] = create_sample(sampleDur, startCat
 
         % Destination rect for this image
         params.trial.rects{k} = CenterRectOnPointd( ...
-            [0 0 rectWidthPx rectHeightPx], ...
+            [0 0 params.LM_WIDTH params.LM_HEIGHT], ...
             xPos, yPos ...
         );
 
@@ -110,7 +105,7 @@ function [sampleOnset, sampleOffset, params] = create_sample(sampleDur, startCat
     %% --------------------------------------------------------------------
     Screen('DrawTexture', win, params.trial.targetTex, [], params.trial.targetRect);
 
-    params.trial.dotRect = CenterRectOnPointd([0 0 dotSizePx dotSizePx], xCenter, yCenter);
+    params.trial.dotRect = CenterRectOnPointd([0 0 params.FIX_SIZE_PX params.FIX_SIZE_PX], xCenter, yCenter);
     Screen('FillOval', win, red, params.trial.dotRect);
 
     %% --------------------------------------------------------------------
