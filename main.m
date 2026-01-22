@@ -3,7 +3,7 @@ clear;
 
 %% read trial structure  csv and convert to mat file
 % Read CSV into a table
-trials_df = readtable('trial_structure_input_left.csv');
+trials_df = readtable('trial_structure_input_right.csv');
 
 % Save to .mat file
 save('trial_structure_input.mat', 'trials_df');

@@ -23,6 +23,8 @@ params.LM_HEIGHT = 50;
 params.LM_WIDTH = 50;
 params.FIX_SIZE_PX    = 12;
 
+params.SPEED_CUE_OFFSET_PX = 150;
+
 params.CORRECT_OFFEST_X = 200;
 params.INCORRECT_OFFEST_X = 200;
  

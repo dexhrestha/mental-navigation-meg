@@ -32,5 +32,4 @@ function trials_df_shuff = create_trial_structure(trials_df)
     trials_df_shuff.speedCueTrial = mod((0:n-1)', 6) == 0;
     trials_df_shuff.speedCueTrial = int32(trials_df_shuff.speedCueTrial);
 
-    
 end

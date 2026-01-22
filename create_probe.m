@@ -13,7 +13,6 @@ function [probeOnset, probeOffset, probeResp, params] = create_probe(probeCat,pr
     [xCenter, yCenter] = RectCenter(Screen('Rect', win));
 
 
-    optionCat   = probeCat+optionCat;
     optionCatId = 2;
     % if probeLoc is 1 set correctto right 
     if probeLoc == 1

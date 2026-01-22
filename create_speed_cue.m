@@ -6,18 +6,11 @@ function [speedCueOnset,speedCueOffset] = create_speed_cue(speed,params)
     red = [255 0 0];
 
     color = params.TEXT_COLOR;        
-%     Draw speed text
-    DrawFormattedText( ...
-        win, ...
-        sprintf('Speed: %g', speed), ...
-        'center', 'center', ...
-        color ...
-    );
-
-    % Flip to screen and get onset timestamp
-    speedCueOnset = Screen('Flip', win);
-    
-
+    if speed == 1.2
+        speed_text = 'Speed: A';
+    else 
+        speed_text = 'Speed B';
+    end
 %% Move images for 2 complete loops
     imgArr = 1:params.N_IMAGES;
     N = numel(imgArr);
@@ -41,9 +34,10 @@ function [speedCueOnset,speedCueOffset] = create_speed_cue(speed,params)
     [xCenter, yCenter] = RectCenter(Screen('Rect', win));
     
     n = numel(params.trial.imgArrPos);
-
+    
+    
     % --- motion control: EXACTLY 100 px in 1 second ---
-    speedPxPerSec = 100;
+    speedPxPerSec = speed * params.LM_WIDTH*2;
     ifi = Screen('GetFlipInterval', win);
     dxPerFrame = speedPxPerSec * ifi;
 
@@ -52,11 +46,24 @@ function [speedCueOnset,speedCueOffset] = create_speed_cue(speed,params)
     baseSorted = sort(basePos);
     spacingPx = median(diff(baseSorted));
     if ~isfinite(spacingPx) || spacingPx <= 0
-        spacingPx = 100; % fallback
+        spacingPx = params.LM_WIDTH*2; % fallback
     end
     
     offsetPx = 0;
     movementDur = params.N_IMAGES/speed*params.SPEED_CUE_LOOPS;
+    
+    %     Draw speed text
+    
+     DrawFormattedText( ...
+            win, ...
+            sprintf(speed_text), ...
+            'center', yCenter - params.SPEED_CUE_OFFSET_PX, ...
+            color ...
+        );
+
+    % Flip to screen and get onset timestamp
+    speedCueOnset = Screen('Flip', win);
+    
     
     vbl = speedCueOnset;
     endT = speedCueOnset+movementDur;
@@ -99,6 +106,12 @@ function [speedCueOnset,speedCueOffset] = create_speed_cue(speed,params)
         
         dotRect = CenterRectOnPointd([0 0 params.FIX_SIZE_PX params.FIX_SIZE_PX], xCenter, yCenter);
         Screen('FillOval', win, red, dotRect);
+            DrawFormattedText( ...
+            win, ...
+            sprintf(speed_text), ...
+            'center', yCenter - params.SPEED_CUE_OFFSET_PX, ...
+            color ...
+        );
         % --- synced flip ---
         vbl = Screen('Flip', win, vbl + 0.5 * ifi);
 
