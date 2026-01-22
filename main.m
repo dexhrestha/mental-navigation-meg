@@ -36,12 +36,12 @@ try
     %% setup screen and textures
     params = setup_psychtbx(params);
     
-    % read and save textures
+    %% read and save textures
     nCats = numel(params.categories);
     nImgs = 3;
 
     params.tex = cell(nCats, nImgs);
-
+   
     for catIdx = 1:nCats
         for imgIdx = 1:nImgs
             imgPath = fullfile('animals', params.categories{catIdx}, sprintf('%d.png', imgIdx));
@@ -65,8 +65,16 @@ try
     KbName('UnifyKeyNames');
     spaceKey = KbName('Space');
     escKey   = KbName('ESCAPE');
+    
+    %% welcome screen
+    create_welcome_screen(params);
+    %%  setup eye tracking
+    
+    %%  setup MEG for TTLs
+    
     %% load trials
     for i = 1:height(trials_df_shuff)
+         
         [row,params] = load_trial(i, trials_df_shuff(i,:), params);
 %         trials_df_shuff(i,:) = row;
 
@@ -95,11 +103,16 @@ try
         end 
     end
 
+    %% goodbye screen
+    create_goodbye_screen(params);
     %% normal cleanup
     if queueCreated
         KbQueueRelease(deviceIndex);
     end
     sca;
+    
+
+    
 
 catch ME
     %% always cleanup
