@@ -1,12 +1,12 @@
 close all;
 clear;
 
-%% read trial structure  csv and convert to mat file
-% Read CSV into a table
-trials_df = readtable('trial_structure_input_right.csv');
-
-% Save to .mat file
-save('trial_structure_input.mat', 'trials_df');
+ %% read trial structure  csv and convert to mat file
+% % Read CSV into a table
+% trials_df = readtable('trial_structure_input_right.csv');
+% 
+% % Save to .mat file
+% save('trial_structure_input.mat', 'trials_df');
 
 %% Setup Environment and Keyboard Input
 setup_env;  % must cre    ate `params`
