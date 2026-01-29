@@ -2,11 +2,19 @@ function [row,params] = load_trial(row,params)
 
     fprintf(' Run %d , Trial %d\n',params.runId,params.trialId);
     
+<<<<<<< HEAD:mental-navigation/load_trial.m
 %     if row.speedCueTrial(1) == 1 
 %         [row.speedCueOnset,row.speedCueOffset] = create_speed_cue(row.speed(1),params);
 %     end
     
     [row.blinkFixOnset,row.blinkFixOffset,params] = create_blink_fixation(row.blinkFixDur(1),params);
+=======
+    if row.speedCueTrial(1) == 1 
+        [row.speedCueOnset,row.speedCueOffset] = create_speed_cue(row.speed(1),params);
+    end
+    
+    [row.blinkFixOnset,row.blinkFixOffset] = create_blink_fixation(row.blinkFixDur(1),params);
+>>>>>>> 88b1d94280b61d57ca6cf2856077dadf226a12fb:load_trial.m
   
     
     if row.feedbackDur(1) > 0
