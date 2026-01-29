@@ -1,3 +1,16 @@
+
+target = "Apple";   % put part of the keyboard name here
+[keyboardIndices, keyboardNames] = GetKeyboardIndices;
+
+idx = find(contains(string(keyboardNames), target, 'IgnoreCase', true), 1);
+
+if isempty(idx)
+    error("No keyboard found matching: %s", target);
+end
+
+params.kbdDeviceIndex = keyboardIndices(idx);
+fprintf("Selected keyboard: %s (index %d)\n", keyboardNames{idx}, params.kbdDeviceIndex);
+
 % Trial Phases Wait Times in Sec
 params.SPEED_CUE_DUR = .25;
 params.BLINK_FIX = 1;
@@ -19,7 +32,7 @@ params.catImages = 3;
 
 % screen positions in deg 
 % DEVELOPER variables
-params.DEV_MODE = false;
+params.DEV_MODE = true;
 params.BLOCK_RUN = true;
 
 %  LETTERS

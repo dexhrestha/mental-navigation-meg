@@ -8,20 +8,11 @@ function [blinkOnset, blinkOffset,params] = create_blink_fixation(blinkFixDur, p
     bg  = params.ptb.BG_COLOR;
 
     % Dot settings
-<<<<<<< HEAD:mental-navigation/create_blink_fixation.m
     red = [255 0 0]; 
     green = [0 255 0];
     % Find center
     Screen('TextSize', win, round(double(params.FIX_SIZE_PX)));
- 
-=======
-    red = [255 0 0];
- 
-    % Find center
-    dotRect = CenterRectOnPointd([0 0 params.FIX_SIZE_PX params.FIX_SIZE_PX], params.ptb.xCenter, params.ptb.yCenter);
-
->>>>>>> 88b1d94280b61d57ca6cf2856077dadf226a12fb:create_blink_fixation.m
-    % Timing: 3 blinks => 3 ON pulses. Use equal ON/OFF inside total duration.
+  % Timing: 3 blinks => 3 ON pulses. Use equal ON/OFF inside total duration.
     nBlinks = 3;
     nPhases = 2 * nBlinks;                 % ON,OFF,ON,OFF,ON,OFF
     phaseDur = blinkFixDur / nPhases;      % seconds per phase
