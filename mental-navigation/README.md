@@ -45,12 +45,12 @@ share screenshots
 2. Replace the speed cues as : FAST or SLOW . DONE .
 3. Add instructions on the speed cue  [ added placeholder]
 4. Replace do with fixation corss and change color of the fixation cross when movement starts . DONE .
-5. Save data file at each run ( behavior , eye and meg(manual) ) 
-6. Make a seperate script for free navigation. Free navigation is used for training before the actual experiment.
+5. Save data file at each run ( behavior , eye and meg(manual) ) . DONE .
+6. Make a seperate script for free navigation. Free navigation is used for training before the actual experiment. DONE .
 7. Find common psychological questions and validated questionnaires
 8. Add contrast gradient to images such that only three images are visible at a time
 9. Add a square at the center, this may participants to get an accurate feedback [to be discussed]
-10. Add a input at start to select InterLandmarkDistance ( try different ILDs).
+10. Add a input at start to select InterLandmarkDistance ( try different ILDs). ( we can try this from setup_exp_env and test in meetings)
 11. Test data collection
 
 

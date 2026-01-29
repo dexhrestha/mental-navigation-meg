@@ -46,7 +46,8 @@ function [params] = create_navigation(speed, params)
     KbReleaseWait;
     vbl = vbl0;
     offsetPx = 0;
-    
+    Screen('BlendFunction', win, GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+
 
     while true
         % --- read keyboard every frame ---
@@ -98,7 +99,21 @@ function [params] = create_navigation(speed, params)
             currCatId    = mod(floor((currImgId - 1) / 3), 6) + 1;
 
             curTex = params.tex{currCatId, currCatImgId};
-            Screen('DrawTexture', win, curTex, [], dstRect);
+            % distance from screen center in pixels
+            dist = abs(currPos(k));   % because currPos is relative to center already
+
+            % choose a falloff radius (tune this)
+            fadeRadius = spacingPx * 2;   % e.g., fully visible within ~2 slots
+
+            % map distance -> alpha in [0..255]
+            alpha01 = 1 - min(dist / fadeRadius, 1);   % 1 at center, 0 far away
+            alpha   = round(255 * alpha01);
+            
+            alpha01 = alpha01.^2;   % or ^3 for sharper center emphasis
+            alpha   = round(255 * alpha01);
+
+            % draw with per-image opacity
+            Screen('DrawTexture', win, curTex, [], dstRect, [], [], [], [255 255 255 alpha]);
             
         end
         
