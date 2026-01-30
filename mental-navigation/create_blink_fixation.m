@@ -1,21 +1,18 @@
-function [blinkOnset, blinkOffset] = create_blink_fixation(blinkFixDur, params)
+function [blinkOnset, blinkOffset,params] = create_blink_fixation(blinkFixDur, params)
 % Shows a red dot that blinks 3 times within blinkFixDur (ms).
 % Returns onset (first flip) and offset (final clear flip).
 
     blinkFixDur = blinkFixDur / 1000;  % ms -> s
 
-    win = params.window;
-    bg  = params.BG_COLOR;
+    win = params.ptb.window;
+    bg  = params.ptb.BG_COLOR;
 
     % Dot settings
-    red = [255 0 0];
-    dotSizePx = 12;
-
+    red = [255 0 0]; 
+    green = [0 255 0];
     % Find center
-    [xCenter, yCenter] = RectCenter(Screen('Rect', win));
-    dotRect = CenterRectOnPointd([0 0 params.FIX_SIZE_PX params.FIX_SIZE_PX], xCenter, yCenter);
-
-    % Timing: 3 blinks => 3 ON pulses. Use equal ON/OFF inside total duration.
+    Screen('TextSize', win, round(double(params.FIX_SIZE_PX)));
+  % Timing: 3 blinks => 3 ON pulses. Use equal ON/OFF inside total duration.
     nBlinks = 3;
     nPhases = 2 * nBlinks;                 % ON,OFF,ON,OFF,ON,OFF
     phaseDur = blinkFixDur / nPhases;      % seconds per phase
@@ -28,15 +25,21 @@ function [blinkOnset, blinkOffset] = create_blink_fixation(blinkFixDur, params)
 
     for p = 1:nPhases
         isOn = mod(p, 2) == 1;  % odd phases ON, even phases OFF
-
+        if p==nPhases
+            params.FIX_COLOR = green; 
+        else 
+            params.FIX_COLOR = red;
+        end
+        
         if isOn
-            
             Screen('FillRect', win, bg);
-            Screen('FillOval', win, red, dotRect);
+            DrawFormattedText(win, '+', 'center','center', params.FIX_COLOR);
+            Screen('Flip', win);
         else
             Screen('FillRect', win, bg);
         end
-
+        
+        
         flipTime = Screen('Flip', win);
 
         if isnan(blinkOnset)

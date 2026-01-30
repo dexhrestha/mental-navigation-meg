@@ -1,13 +1,13 @@
-function [movementOnset, movementOffset, userInput, params] = create_movement(speed,movementDur, params, vbl0)
+function [movementOnset, movementOffset, userInput, params] = create_movement(startId,speed,movementDur,visual, params, vbl0)
 % True carousel: smooth motion + rotate IDs when passing one slot spacing.
 % movementDur in ms. vbl0 is timestamp from previous Screen('Flip').
 
     if nargin < 2
         error('Need movementDur and params.');
     end
-    if nargin < 4 || isempty(vbl0)
+    if nargin < 6 || isempty(vbl0)
         % Fallback, but this can cause blink if no frame was drawn:
-        vbl0 = Screen('Flip', params.window, [], 1);
+        vbl0 = Screen('Flip', params.ptb.window, [], 1);
     end
 
     if isempty(movementDur) || ~isscalar(movementDur) || movementDur < 0
@@ -15,8 +15,8 @@ function [movementOnset, movementOffset, userInput, params] = create_movement(sp
     end
 
     movementDur = movementDur / 1000;  % ms -> s
-    win = params.window;
-    bg  = params.BG_COLOR;
+    win = params.ptb.window;
+    bg  = params.ptb.BG_COLOR;
     red = [255 0 0];
 
     userInput = -1;
@@ -30,9 +30,9 @@ function [movementOnset, movementOffset, userInput, params] = create_movement(sp
     % speed = 2 means move 2 images in 1 second
     % so this function should also take speed of the movment in terms of
     % distance_px_per_second
-    % speed = 2 in distance_px_per_second is = 2 * params.LM_WIDTH * 2
+    % speed = 2 in distance_px_per_second is = 2 * params.LM_WIDTH_PX * 2
     
-    speedPxPerSec = speed * params.LM_WIDTH*2;
+    speedPxPerSec = speed * (params.LM_WIDTH_PX + params.ILD_PX);
     ifi = Screen('GetFlipInterval', win);
     dxPerFrame = speedPxPerSec * ifi;
 
@@ -42,27 +42,42 @@ function [movementOnset, movementOffset, userInput, params] = create_movement(sp
     spacingPx = median(diff(baseSorted));
     
     if ~isfinite(spacingPx) || spacingPx <= 0
-        spacingPx = params.LM_WIDTH*2; % fallback
+        spacingPx = params.LM_WIDTH_PX*2; % fallback
     end
 
     offsetPx = 0;  % smooth sub-slot offset
 
     movementOnset = GetSecs;
-    %movementDur = 1; % test  using one second
-    
 
     endT = movementOnset + movementDur;
     vbl = vbl0;
 
-    KbReleaseWait;
+    Screen('BlendFunction', win, GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+
+    KbReleaseWait(params.kbdDeviceIndex);
     fprintf("movementOnset %g \n  movementDur %g \n endT %g \n",movementOnset,movementDur,endT);
 %     lastPrintedSec = -1 ;
+%     fprintf("Distance from center %d for startId %d \n",dist,startId)
+    framePad = 6;                 % px padding around image (tune)
+    frameLineW = 5;               % border thickness (tune)
+    frameColor = [255 0 0];   % frame color (white)
+
+    centerX = xCenter;
+    centerY = yCenter - params.START_Y_PX;
+
+    frameRect = CenterRectOnPointd( ...
+        [0 0 params.LM_WIDTH_PX params.LM_HEIGHT_PX], ...
+        centerX, centerY);
+
+    % add padding
+    frameRect = frameRect + [-framePad -framePad framePad framePad];
+    showSeq = 1;
     while true
         if vbl >= endT
             break;
         end
 
-        %         elapsedSec = floor(GetSecs - movementOnset);
+%         elapsedSec = floor(GetSecs - movementOnset);
 % 
 %         if elapsedSec > lastPrintedSec
 %             fprintf('%d sec\n', elapsedSec);
@@ -83,39 +98,69 @@ function [movementOnset, movementOffset, userInput, params] = create_movement(sp
         end
 
         currPos = basePos + offsetPx;
-
+        
+        idx = find(params.trial.imgArrShifted == startId, 1);
+        posOfImageX = currPos(idx);
         % --- draw frame ---
         Screen('FillRect', win, bg);
-
+        
+        if showSeq
+            showSeq = posOfImageX<spacingPx*2;
+        end
         for k = 1:n
             xPos = xCenter + currPos(k);
             yPos = yCenter - params.START_Y_PX;
 
-            dstRect = CenterRectOnPointd([0 0 params.LM_WIDTH params.LM_HEIGHT], xPos, yPos);
+            dstRect = CenterRectOnPointd([0 0 params.LM_WIDTH_PX params.LM_HEIGHT_PX], xPos, yPos);
 
             currImgId = params.trial.imgArrShifted(k);
             currCatImgId = mod(currImgId - 1, 3) + 1;
             currCatId    = mod(floor((currImgId - 1) / 3), 6) + 1;
 
             curTex = params.tex{currCatId, currCatImgId};
-            Screen('DrawTexture', win, curTex, [], dstRect);
+            
+            if showSeq || visual
+                % distance from screen center in pixels
+                dist = abs(currPos(k));   % because currPos is relative to center already
+
+                % choose a falloff radius (tune this)
+                fadeRadius = spacingPx * 2;   % e.g., fully visible within ~2 slots
+
+                % map distance -> alpha in [0..255]
+                alpha01 = 1 - min(dist / fadeRadius, 1);   % 1 at center, 0 far away
+                alpha   = round(255 * alpha01);
+
+                alpha01 = alpha01.^2;   % or ^3 for sharper center emphasis
+                alpha   = round(255 * alpha01);
+
+                % draw with per-image opacity
+                Screen('DrawTexture', win, curTex, [], dstRect, [], [], [], [255 255 255 alpha]);
+
+                Screen('DrawTexture', win, params.trial.targetTex, [], params.trial.targetRect);
+                % --- FIXED FRAME at center slot ---
+
+                % draw outline rectangle
+                Screen('FrameRect', win, frameColor, frameRect, frameLineW);
+            end
         end
-
+       
         % Target + fixation
-        Screen('DrawTexture', win, params.trial.targetTex, [], params.trial.targetRect);
-        dotRect = CenterRectOnPointd([0 0 params.FIX_SIZE_PX params.FIX_SIZE_PX], xCenter, yCenter);
-        Screen('FillOval', win, red, dotRect);
-
+        
+        
+        DrawFormattedText(win, '+', 'center', 'center', params.FIX_COLOR);
+        
         % --- synced flip ---
         vbl = Screen('Flip', win, vbl + 0.5 * ifi);
 
         % keys
-        [keyIsDown, ~, keyCode] = KbCheck;
+        [keyIsDown, ~, keyCode] = KbCheck(params.kbdDeviceIndex);
         if keyIsDown
             if keyCode(KbName('ESCAPE'))
                 sca;
                 error('UserAbort:ESC', 'Experiment aborted by user');
             elseif keyCode(KbName('SPACE'))
+                dist = abs(currPos(startId));
+%                 fprintf("Distance from center %d for startId %d \n",dist,startId)
                 userInput = GetSecs;
                 movementOffset = userInput;
                 % Store final image x-positions

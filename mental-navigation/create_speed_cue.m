@@ -1,16 +1,18 @@
 function [speedCueOnset,speedCueOffset] = create_speed_cue(speed,params)
     speedCueDur = params.SPEED_CUE_DUR;
     
-    win   = params.window;
-    bg  = params.BG_COLOR;
+    win = params.ptb.window;
+    bg  = params.ptb.BG_COLOR;
     red = [255 0 0];
 
     color = params.TEXT_COLOR;        
     if speed == 1.2
-        speed_text = 'Speed: A';
+        speed_text = 'SLOW';
     else 
-        speed_text = 'Speed B';
+        speed_text = 'FAST';
     end
+    
+    
 %% Move images for 2 complete loops
     imgArr = 1:params.N_IMAGES;
     N = numel(imgArr);
@@ -29,7 +31,7 @@ function [speedCueOnset,speedCueOffset] = create_speed_cue(speed,params)
     % Compute X positions relative to screen center
     % Values are symmetric around 0 and spaced by 100 px
     %% --------------------------------------------------------------------
-    params.trial.imgArrPos = ((1:N) - centerIdx) * (50 + 50);
+    params.trial.imgArrPos = ((1:N) - centerIdx) * (params.LM_WIDTH_PX +   params.ILD_PX);
     
     [xCenter, yCenter] = RectCenter(Screen('Rect', win));
     
@@ -37,7 +39,7 @@ function [speedCueOnset,speedCueOffset] = create_speed_cue(speed,params)
     
     
     % --- motion control: EXACTLY 100 px in 1 second ---
-    speedPxPerSec = speed * params.LM_WIDTH*2;
+    speedPxPerSec = speed * (params.LM_WIDTH_PX + params.ILD_PX);
     ifi = Screen('GetFlipInterval', win);
     dxPerFrame = speedPxPerSec * ifi;
 
@@ -46,20 +48,27 @@ function [speedCueOnset,speedCueOffset] = create_speed_cue(speed,params)
     baseSorted = sort(basePos);
     spacingPx = median(diff(baseSorted));
     if ~isfinite(spacingPx) || spacingPx <= 0
-        spacingPx = params.LM_WIDTH*2; % fallback
+        spacingPx = params.LM_WIDTH_PX*2; % fallback
     end
     
     offsetPx = 0;
     movementDur = params.N_IMAGES/speed*params.SPEED_CUE_LOOPS;
-    
-    %     Draw speed text
-    
+    Screen('TextSize', win, round(double(params.SPEED_TEXT_PX)));
+    % Draw speed text
      DrawFormattedText( ...
             win, ...
             sprintf(speed_text), ...
             'center', yCenter - params.SPEED_CUE_OFFSET_PX, ...
             color ...
         );
+    
+     DrawFormattedText( ...
+        win, ...
+        sprintf('ADD MORE INSTRUCTIONS HERE'), ...
+        'center', yCenter + params.SPEED_CUE_OFFSET_PX, ...
+        color ...
+    );
+
 
     % Flip to screen and get onset timestamp
     speedCueOnset = Screen('Flip', win);
@@ -94,7 +103,7 @@ function [speedCueOnset,speedCueOffset] = create_speed_cue(speed,params)
             xPos = xCenter + currPos(k);
             yPos = yCenter - params.START_Y_PX;
 
-            dstRect = CenterRectOnPointd([0 0 params.LM_WIDTH params.LM_HEIGHT], xPos, yPos);
+            dstRect = CenterRectOnPointd([0 0 params.LM_WIDTH_PX params.LM_HEIGHT_PX], xPos, yPos);
 
             currImgId = params.trial.imgArrShifted(k);
             currCatImgId = mod(currImgId - 1, 3) + 1;
@@ -104,14 +113,21 @@ function [speedCueOnset,speedCueOffset] = create_speed_cue(speed,params)
             Screen('DrawTexture', win, curTex, [], dstRect);
         end
         
-        dotRect = CenterRectOnPointd([0 0 params.FIX_SIZE_PX params.FIX_SIZE_PX], xCenter, yCenter);
-        Screen('FillOval', win, red, dotRect);
+        
             DrawFormattedText( ...
             win, ...
             sprintf(speed_text), ...
             'center', yCenter - params.SPEED_CUE_OFFSET_PX, ...
             color ...
         );
+    
+       
+             DrawFormattedText( ...
+                win, ...
+                sprintf('ADD MORE INSTRUCTIONS HERE'), ...
+                'center', yCenter + params.SPEED_CUE_OFFSET_PX, ...
+                color ...
+            );
         % --- synced flip ---
         vbl = Screen('Flip', win, vbl + 0.5 * ifi);
 

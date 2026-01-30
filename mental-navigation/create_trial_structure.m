@@ -1,4 +1,4 @@
-function trials_df_shuff = create_trial_structure(trials_df)
+function trials_df_shuff = create_trial_structure(trials_df,params)
 % %CREATE_TRIAL_STRUCTURE Build trial timing columns, create probe schedule, shuffle within groups,
 % %and reassign IDs within each run.
 % %
@@ -32,4 +32,15 @@ function trials_df_shuff = create_trial_structure(trials_df)
     trials_df_shuff.speedCueTrial = mod((0:n-1)', 6) == 0;
     trials_df_shuff.speedCueTrial = int32(trials_df_shuff.speedCueTrial);
 
+    
+    if params.session == 1
+        trials_df_shuff.visual = zeros(nTrials,1);
+        trials_df_shuff.visual(1:nTrials) = 1;
+    end
+    
+    if params.session == 2
+        trials_df_shuff.visual = zeros(nTrials,1);
+        trials_df_shuff.visual(1:6) = 1;
+    end
+   
 end

@@ -1,7 +1,7 @@
-function [probeOnset, probeOffset, probeResp, params] = create_probe(probeCat,probeCatId,probeLoc,optionCat, params)
+function [probeOnset, probeOffset, probeRespKey,probeRespTime, params] = create_probe(probeCat,probeCatId,probeLoc,optionCat, params)
 
-    win = params.window;
-    bg  = params.BG_COLOR;
+    win = params.ptb.window;
+    bg  = params.ptb.BG_COLOR;
 
     % Use the SAME keyboard device as the rest of the experiment
     if isfield(params,'kbdDeviceIndex')
@@ -10,26 +10,25 @@ function [probeOnset, probeOffset, probeResp, params] = create_probe(probeCat,pr
         deviceIndex = [];  % fallback: PTB default keyboard
     end
 
-    [xCenter, yCenter] = RectCenter(Screen('Rect', win));
 
 
     optionCatId = 2;
     % if probeLoc is 1 set correctto right 
     if probeLoc == 1
-        correct_xCenter = xCenter - params.CORRECT_OFFEST_X;
-        incorrect_xCenter = xCenter + params.INCORRECT_OFFEST_X;
+        correct_params.xCenter = params.ptb.xCenter - params.CORRECT_OFFSET_PX;
+        incorrect_params.xCenter = params.ptb.xCenter + params.INCORRECT_OFFSET_PX;
     % if probeLoc is -1 set correct to left
     else 
-        correct_xCenter = xCenter + params.CORRECT_OFFEST_X;
-        incorrect_xCenter = xCenter - params.INCORRECT_OFFEST_X;
+        correct_params.xCenter = params.ptb.xCenter + params.CORRECT_OFFSET_PX;
+        incorrect_params.xCenter = params.ptb.xCenter - params.INCORRECT_OFFSET_PX;
     end
     
-    correctRect   = CenterRectOnPointd([0 0 params.LM_WIDTH params.LM_HEIGHT], ...
-        correct_xCenter, yCenter);
+    correctRect   = CenterRectOnPointd([0 0 params.LM_WIDTH_PX params.LM_HEIGHT_PX], ...
+        correct_params.xCenter, params.ptb.yCenter);
     correctTex    = params.tex{probeCat, probeCatId};
 
-    incorrectRect = CenterRectOnPointd([0 0 params.LM_WIDTH params.LM_HEIGHT], ...
-        incorrect_xCenter, yCenter);
+    incorrectRect = CenterRectOnPointd([0 0 params.LM_WIDTH_PX params.LM_HEIGHT_PX], ...
+        incorrect_params.xCenter, params.ptb.yCenter);
     incorrectTex  = params.tex{optionCat, optionCatId};
 
     % Draw probe
@@ -70,11 +69,11 @@ function [probeOnset, probeOffset, probeResp, params] = create_probe(probeCat,pr
 
                 if tLeft > 0 || tRight > 0
                     if tLeft > 0 && (tRight == 0 || tLeft < tRight)
-                        probeResp.key = 'left';
+                        probeResp.key = -1;
                         probeResp.keyCode = leftKey;
                         probeResp.t  = tLeft;
                     else
-                        probeResp.key = 'right';
+                        probeResp.key = 1;
                         probeResp.keyCode = rightKey;
                         probeResp.t  = tRight;
                     end
@@ -87,16 +86,24 @@ function [probeOnset, probeOffset, probeResp, params] = create_probe(probeCat,pr
             end
         end
 
-        WaitSecs(0.001);
+        WaitSecs(0.001); 
     end
     
     
     if isfield(probeResp,'key') && ~isempty(probeResp.key)
+        probeRespKey = probeResp.key;
+        probeRespTime = probeResp.t;
         fprintf('Response: %s\n', probeResp.key);
-    end
+    else
+        probeRespTime = -1;
+        probeRespKey = -1;
 
-    % Probe offset: 
+    end
+ 
+     % Probe offset: 
     Screen('FillRect', win, bg);
     probeOffset = Screen('Flip', win);
+    
+    
 
 end

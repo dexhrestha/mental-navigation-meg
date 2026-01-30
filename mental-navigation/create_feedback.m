@@ -1,16 +1,14 @@
 function [feedbackOnset,feedbackOffset,params] = create_feedback(feedbackDur, params)
     feedbackDur = feedbackDur/1000;
     
-    win = params.window;
+    win = params.ptb.window;
     n = numel(params.trial.imgArrPos);
     
-    [xCenter, yCenter] = RectCenter(Screen('Rect', win));
-
     for k = 1:n
-        xPos = xCenter + params.trial.imgArrPos(k);
-        yPos = yCenter - params.START_Y_PX;
+        xPos = params.ptb.xCenter + params.trial.imgArrPos(k);
+        yPos = params.ptb.yCenter - params.START_Y_PX;
 
-        dstRect = CenterRectOnPointd([0 0 params.LM_WIDTH params.LM_HEIGHT], xPos, yPos);
+        dstRect = CenterRectOnPointd([0 0 params.LM_WIDTH_PX params.LM_HEIGHT_PX], xPos, yPos);
 
         currImgId = params.trial.imgArrShifted(k);
         currCatImgId = mod(currImgId - 1, 3) + 1;

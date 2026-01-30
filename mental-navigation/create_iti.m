@@ -8,8 +8,8 @@ function [itiOnset,itiOffset,params] = create_iti(itiDur, params)
 
     itiDur = itiDur / 1000;  % ms -> s
 
-    win = params.window;
-    bg  = params.BG_COLOR;
+    win = params.ptb.window;
+    bg  = params.ptb.BG_COLOR;
 
     % Draw blank screen
     Screen('FillRect', win, bg);

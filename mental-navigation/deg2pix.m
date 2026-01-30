@@ -2,7 +2,7 @@ function [px,py] = deg2pix(x_deg, y_deg, screen_width_px,screen_height_px, scree
 
 
     if nargin < 6, viewing_distance_cm = 75;end 
-    if nargin < 5, screen_width_cm = 53; end
+    if nargin < 5, screen_width_cm = 23.5; end
     if nargin < 4, screen_height_px = 1080; end
     if nargin < 3, screen_width_px = 1920; end
 
