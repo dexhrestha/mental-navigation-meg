@@ -11,6 +11,8 @@ function [speedCueOnset,speedCueOffset] = create_speed_cue(speed,params)
     else 
         speed_text = 'FAST';
     end
+    
+    
 %% Move images for 2 complete loops
     imgArr = 1:params.N_IMAGES;
     N = numel(imgArr);
@@ -51,9 +53,8 @@ function [speedCueOnset,speedCueOffset] = create_speed_cue(speed,params)
     
     offsetPx = 0;
     movementDur = params.N_IMAGES/speed*params.SPEED_CUE_LOOPS;
-    
-    %     Draw speed text
-    
+    Screen('TextSize', win, round(double(params.SPEED_TEXT_PX)));
+    % Draw speed text
      DrawFormattedText( ...
             win, ...
             sprintf(speed_text), ...

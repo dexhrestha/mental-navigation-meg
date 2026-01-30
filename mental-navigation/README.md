@@ -16,13 +16,13 @@ Mental Navigation for MEG
 1 loop
 add more information in speed
 (blank screen (for some sec) then speed cue) ( fixation cross and change color for movement ) 
-6. At the start of each trial, show first two images [TBD today]
+
 7. Add in resting state data collection between runs [During break stop eye tracking or meg and collect data??] 
 
 8. Free navigation at start [?? is this where participants are allowed to press a button to move left or right???]
   make a different script 
 run only on first day to familiarize the environment
-(duration : 4 minutes (max) ; add stop key  )
+(duration : 4 minutes (max) ; add stop key )
 
 # cedrus - look in to giuliano's code for ptb functions? (  )
 
@@ -36,7 +36,7 @@ use this for relevant events
 share screenshots
 
 
-1. Selection of Stimuli 
+1. Selection of Stimuli [ to be discussed]
     1. Icons
     2. Realistic images with color [ replace background with solid background]
     3. Look for datasets that use animals with solid bg 
@@ -47,16 +47,16 @@ share screenshots
 4. Replace do with fixation corss and change color of the fixation cross when movement starts . DONE .
 5. Save data file at each run ( behavior , eye and meg(manual) ) . DONE .
 6. Make a seperate script for free navigation. Free navigation is used for training before the actual experiment. DONE .
-7. Find common psychological questions and validated questionnaires
 8. Add contrast gradient to images such that only three images are visible at a time . DONE for visual ; if it is okay will implement to mental.
+7. Find common psychological questions and validated questionnaires
 11. Test data collection
+6. At the start of each trial, show first two images [TBD ]
 
 
 Next meeting :
-
-10. Add a input at start to select InterLandmarkDistance ( try different ILDs). ( we can try this from setup_exp_env and test in meetings)
-
+1. Selection of Stimuli [ to be discussed]
 9. Add a square at the center, this may participants to get an accurate feedback [to be discussed]
+10. Add a input at start to select InterLandmarkDistance ( try different ILDs). ( we can try this from setup_exp_env and test in meetings)
 
 Discuss about sessions
 option 1 

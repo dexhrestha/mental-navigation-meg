@@ -38,6 +38,9 @@ function trials_df_shuff = create_trial_structure(trials_df,params)
         trials_df_shuff.visual(1:nTrials) = 1;
     end
     
-    
-    
+    if params.session == 2
+        trials_df_shuff.visual = zeros(nTrials,1);
+        trials_df_shuff.visual(1:6) = 1;
+    end
+   
 end

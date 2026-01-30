@@ -1,11 +1,11 @@
-function [movementOnset, movementOffset, userInput, params] = create_movement(speed,movementDur,visual, params, vbl0)
+function [movementOnset, movementOffset, userInput, params] = create_movement(startId,speed,movementDur,visual, params, vbl0)
 % True carousel: smooth motion + rotate IDs when passing one slot spacing.
 % movementDur in ms. vbl0 is timestamp from previous Screen('Flip').
 
     if nargin < 2
         error('Need movementDur and params.');
     end
-    if nargin < 5 || isempty(vbl0)
+    if nargin < 6 || isempty(vbl0)
         % Fallback, but this can cause blink if no frame was drawn:
         vbl0 = Screen('Flip', params.ptb.window, [], 1);
     end
@@ -48,8 +48,6 @@ function [movementOnset, movementOffset, userInput, params] = create_movement(sp
     offsetPx = 0;  % smooth sub-slot offset
 
     movementOnset = GetSecs;
-    %movementDur = 1; % test  using one second
-    
 
     endT = movementOnset + movementDur;
     vbl = vbl0;
@@ -59,12 +57,27 @@ function [movementOnset, movementOffset, userInput, params] = create_movement(sp
     KbReleaseWait(params.kbdDeviceIndex);
     fprintf("movementOnset %g \n  movementDur %g \n endT %g \n",movementOnset,movementDur,endT);
 %     lastPrintedSec = -1 ;
+%     fprintf("Distance from center %d for startId %d \n",dist,startId)
+    framePad = 6;                 % px padding around image (tune)
+    frameLineW = 5;               % border thickness (tune)
+    frameColor = [255 0 0];   % frame color (white)
+
+    centerX = xCenter;
+    centerY = yCenter - params.START_Y_PX;
+
+    frameRect = CenterRectOnPointd( ...
+        [0 0 params.LM_WIDTH_PX params.LM_HEIGHT_PX], ...
+        centerX, centerY);
+
+    % add padding
+    frameRect = frameRect + [-framePad -framePad framePad framePad];
+    showSeq = 1;
     while true
         if vbl >= endT
             break;
         end
 
-        %         elapsedSec = floor(GetSecs - movementOnset);
+%         elapsedSec = floor(GetSecs - movementOnset);
 % 
 %         if elapsedSec > lastPrintedSec
 %             fprintf('%d sec\n', elapsedSec);
@@ -85,10 +98,15 @@ function [movementOnset, movementOffset, userInput, params] = create_movement(sp
         end
 
         currPos = basePos + offsetPx;
-
+        
+        idx = find(params.trial.imgArrShifted == startId, 1);
+        posOfImageX = currPos(idx);
         % --- draw frame ---
         Screen('FillRect', win, bg);
-
+        
+        if showSeq
+            showSeq = posOfImageX<spacingPx*2;
+        end
         for k = 1:n
             xPos = xCenter + currPos(k);
             yPos = yCenter - params.START_Y_PX;
@@ -100,8 +118,8 @@ function [movementOnset, movementOffset, userInput, params] = create_movement(sp
             currCatId    = mod(floor((currImgId - 1) / 3), 6) + 1;
 
             curTex = params.tex{currCatId, currCatImgId};
-            visual = 1;
-            if visual
+            
+            if showSeq || visual
                 % distance from screen center in pixels
                 dist = abs(currPos(k));   % because currPos is relative to center already
 
@@ -117,33 +135,20 @@ function [movementOnset, movementOffset, userInput, params] = create_movement(sp
 
                 % draw with per-image opacity
                 Screen('DrawTexture', win, curTex, [], dstRect, [], [], [], [255 255 255 alpha]);
-             end
-        end
 
-        % Target + fixation
-        if visual
-            Screen('DrawTexture', win, params.trial.targetTex, [], params.trial.targetRect);
+                Screen('DrawTexture', win, params.trial.targetTex, [], params.trial.targetRect);
+                % --- FIXED FRAME at center slot ---
+
+                % draw outline rectangle
+                Screen('FrameRect', win, frameColor, frameRect, frameLineW);
+            end
         end
+       
+        % Target + fixation
+        
         
         DrawFormattedText(win, '+', 'center', 'center', params.FIX_COLOR);
-        % --- FIXED FRAME at center slot ---
-%         framePad = 6;                 % px padding around image (tune)
-%         frameLineW = 5;               % border thickness (tune)
-%         frameColor = [255 0 0];   % frame color (white)
-% 
-%         centerX = xCenter;
-%         centerY = yCenter - params.START_Y_PX;
-% 
-%         frameRect = CenterRectOnPointd( ...
-%             [0 0 params.LM_WIDTH_PX params.LM_HEIGHT_PX], ...
-%             centerX, centerY);
-% 
-%         % add padding
-%         frameRect = frameRect + [-framePad -framePad framePad framePad];
-% 
-%         % draw outline rectangle
-%         Screen('FrameRect', win, frameColor, frameRect, frameLineW);
-
+        
         % --- synced flip ---
         vbl = Screen('Flip', win, vbl + 0.5 * ifi);
 
@@ -154,6 +159,8 @@ function [movementOnset, movementOffset, userInput, params] = create_movement(sp
                 sca;
                 error('UserAbort:ESC', 'Experiment aborted by user');
             elseif keyCode(KbName('SPACE'))
+                dist = abs(currPos(startId));
+%                 fprintf("Distance from center %d for startId %d \n",dist,startId)
                 userInput = GetSecs;
                 movementOffset = userInput;
                 % Store final image x-positions

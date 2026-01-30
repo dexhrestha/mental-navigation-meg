@@ -4,10 +4,6 @@ function trials_df = initialize_trials(trials_df)
     defaultVal = -1;
     n = height(trials_df);
 
-
-
-    
-    
     %{ 
 Add the following columns as empty columns to the trails_df_shuff matrix to
 record the output 
@@ -34,7 +30,6 @@ record the output
     %}
     
     empty = nan(n,1);
-
     trials_df.speedCueOnset        = empty;
     trials_df.speedCueOffset       = empty;
     trials_df.blinkFixOnset   = empty;

@@ -1,4 +1,4 @@
-function [sampleOnset, sampleOffset, params] = create_sample(sampleDur, startCat,startCatPos, startId, targetCat,targetCatPos, targetId, params)
+function [sampleOnset, sampleOffset, params] = create_sample(sampleDur, startId, targetCat,targetCatPos, targetId, params)
 % CREATE_SAMPLE
 % Displays a row of images centered around the start image, plus a target image
 % and a fixation dot. All stimuli are shown for sampleDur milliseconds.
@@ -105,7 +105,12 @@ function [sampleOnset, sampleOffset, params] = create_sample(sampleDur, startCat
     %% --------------------------------------------------------------------
     Screen('DrawTexture', win, params.trial.targetTex, [], params.trial.targetRect);
     Screen('TextSize', win, params.FIX_SIZE_PX);
+
     
+    if ~isfield(params,'FIX_COLOR')
+        params.FIX_COLOR = [0 255 0];
+    end
+
     DrawFormattedText(win, '+', 'center','center', params.FIX_COLOR);
    
 

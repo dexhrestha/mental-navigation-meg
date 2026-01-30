@@ -159,7 +159,7 @@ try
         run_id = runs(r);
         
         run_df = trials_df_shuff(trials_df_shuff.run == run_id, :);
-        run_df = run_df(1:3, :);
+%         run_df = run_df(1:3, :);
 
         % kb wait 
         % save data manually 

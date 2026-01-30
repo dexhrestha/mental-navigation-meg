@@ -1,4 +1,8 @@
 
+% DEVELOPER variables
+params.DEV_MODE = true;
+params.BLOCK_RUN = true;
+
 target = "Apple";   % put part of the keyboard name here
 [keyboardIndices, keyboardNames] = GetKeyboardIndices;
 
@@ -15,6 +19,7 @@ fprintf("Selected keyboard: %s (index %d)\n", keyboardNames{idx}, params.kbdDevi
 params.SPEED_CUE_DUR = .25;
 params.BLINK_FIX = 1;
 params.TEXT_COLOR =  uint8([255 255 255]);           % also fine (double)
+
 params.SPEED_CUE_LOOPS = 1;
 
 % read images categories
@@ -31,9 +36,7 @@ params.catImages = 3;
 
 
 % screen positions in deg 
-% DEVELOPER variables
-params.DEV_MODE = true;
-params.BLOCK_RUN = true;
+
 
 %  LETTERS
 params.FONT_FAMILY = 'Arial';
@@ -52,7 +55,7 @@ if params.DEV_MODE
     params.FIX_SIZE_DEG         = 0.5;
 
     params.SPEED_CUE_OFFSET_DEG = 3.0;
-
+    params.SPEED_TEXT_DEG = .3;   
     params.CORRECT_OFFSET_DEG   = 2.0;
     params.INCORRECT_OFFSET_DEG = 2.0;
     
@@ -68,14 +71,14 @@ else
     params.FIX_SIZE_DEG         = .8;
 
     params.SPEED_CUE_OFFSET_DEG = 4.0;
-
+    params.SPEED_TEXT_DEG = .3;    
     params.CORRECT_OFFSET_DEG   = 4.0;
     params.INCORRECT_OFFSET_DEG = 4.0;
 end 
 
 % SCREEN SETTINGS
 
-params.screenWidthCm =  28.5; %28.5;
+params.screenWidthCm =  50; % 28.5; 
 
 params.screenWidthPx = 1920;
 
@@ -106,6 +109,9 @@ params.CORRECT_OFFSET_PX = deg2px(params.CORRECT_OFFSET_DEG, ...
     params.screenWidthCm, params.screenWidthPx, params.viewingDistCm);
 
 params.INCORRECT_OFFSET_PX = deg2px(params.INCORRECT_OFFSET_DEG, ...
+    params.screenWidthCm, params.screenWidthPx, params.viewingDistCm);
+
+params.SPEED_TEXT_PX = deg2px(params.SPEED_TEXT_DEG, ...
     params.screenWidthCm, params.screenWidthPx, params.viewingDistCm);
 
 params.FIX_SIZE_PX = round(params.FIX_SIZE_PX);

@@ -171,22 +171,3 @@ catch ME
 end
      
 sca;
-
- 
-
-% welcome 
-% instructions 
-
-% for each run 
-% kb wait ( manually save meg data; so experimenter can start the experiment  )
- % another script ( load trials in run )
-     % for each trial in the run
-     % show trials 
-     %end trials
-     
-    % save the data for run
-    % show a break screen (  " this is a break ')
-    % send trigger for eye and Meg  ( start trigger)
-    % wait (~ 1min )
-    % send trigger  ( stop trigger )
-   % end run 
