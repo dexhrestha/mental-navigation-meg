@@ -128,7 +128,7 @@ function [params] = create_navigation(speed, params)
 
     % Smaller instruction text
     Screen('TextSize', win, 24);
-    DrawFormattedText(win, 'Press esc to exit', 'center', params.ptb.yCenter - 200, [255 255 255]);
+    DrawFormattedText(win, 'Press esc to exit', 'center', params.ptb.yCenter - params.SPEED_CUE_OFFSET_PX, [255 255 255]);
 
     vbl = Screen('Flip', win, vbl + 0.5 * ifi);
     end

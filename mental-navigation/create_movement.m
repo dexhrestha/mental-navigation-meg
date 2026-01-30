@@ -54,7 +54,9 @@ function [movementOnset, movementOffset, userInput, params] = create_movement(sp
     endT = movementOnset + movementDur;
     vbl = vbl0;
 
-    KbReleaseWait;
+    Screen('BlendFunction', win, GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+
+    KbReleaseWait(params.kbdDeviceIndex);
     fprintf("movementOnset %g \n  movementDur %g \n endT %g \n",movementOnset,movementDur,endT);
 %     lastPrintedSec = -1 ;
     while true
@@ -98,9 +100,24 @@ function [movementOnset, movementOffset, userInput, params] = create_movement(sp
             currCatId    = mod(floor((currImgId - 1) / 3), 6) + 1;
 
             curTex = params.tex{currCatId, currCatImgId};
+            visual = 1;
             if visual
-                Screen('DrawTexture', win, curTex, [], dstRect);
-            end
+                % distance from screen center in pixels
+                dist = abs(currPos(k));   % because currPos is relative to center already
+
+                % choose a falloff radius (tune this)
+                fadeRadius = spacingPx * 2;   % e.g., fully visible within ~2 slots
+
+                % map distance -> alpha in [0..255]
+                alpha01 = 1 - min(dist / fadeRadius, 1);   % 1 at center, 0 far away
+                alpha   = round(255 * alpha01);
+
+                alpha01 = alpha01.^2;   % or ^3 for sharper center emphasis
+                alpha   = round(255 * alpha01);
+
+                % draw with per-image opacity
+                Screen('DrawTexture', win, curTex, [], dstRect, [], [], [], [255 255 255 alpha]);
+             end
         end
 
         % Target + fixation
@@ -109,12 +126,29 @@ function [movementOnset, movementOffset, userInput, params] = create_movement(sp
         end
         
         DrawFormattedText(win, '+', 'center', 'center', params.FIX_COLOR);
+        % --- FIXED FRAME at center slot ---
+%         framePad = 6;                 % px padding around image (tune)
+%         frameLineW = 5;               % border thickness (tune)
+%         frameColor = [255 0 0];   % frame color (white)
+% 
+%         centerX = xCenter;
+%         centerY = yCenter - params.START_Y_PX;
+% 
+%         frameRect = CenterRectOnPointd( ...
+%             [0 0 params.LM_WIDTH_PX params.LM_HEIGHT_PX], ...
+%             centerX, centerY);
+% 
+%         % add padding
+%         frameRect = frameRect + [-framePad -framePad framePad framePad];
+% 
+%         % draw outline rectangle
+%         Screen('FrameRect', win, frameColor, frameRect, frameLineW);
 
         % --- synced flip ---
         vbl = Screen('Flip', win, vbl + 0.5 * ifi);
 
         % keys
-        [keyIsDown, ~, keyCode] = KbCheck;
+        [keyIsDown, ~, keyCode] = KbCheck(params.kbdDeviceIndex);
         if keyIsDown
             if keyCode(KbName('ESCAPE'))
                 sca;

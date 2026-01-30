@@ -48,10 +48,28 @@ share screenshots
 5. Save data file at each run ( behavior , eye and meg(manual) ) . DONE .
 6. Make a seperate script for free navigation. Free navigation is used for training before the actual experiment. DONE .
 7. Find common psychological questions and validated questionnaires
-8. Add contrast gradient to images such that only three images are visible at a time
-9. Add a square at the center, this may participants to get an accurate feedback [to be discussed]
-10. Add a input at start to select InterLandmarkDistance ( try different ILDs). ( we can try this from setup_exp_env and test in meetings)
+8. Add contrast gradient to images such that only three images are visible at a time . DONE for visual ; if it is okay will implement to mental.
 11. Test data collection
+
+
+Next meeting :
+
+10. Add a input at start to select InterLandmarkDistance ( try different ILDs). ( we can try this from setup_exp_env and test in meetings)
+
+9. Add a square at the center, this may participants to get an accurate feedback [to be discussed]
+
+Discuss about sessions
+option 1 
+Manual visual navigation each day before experiment
+Session 1: Visual1 Visual2 Mental2  Mental1 Visual2 Visual1 Mental1 Mental2  Visual [Sequence learning run]
+session 2: Mental [Mental Navigation test runs]
+
+option 2
+Session 1: Visual1 Visual2 Mental2  Mental1 Visual2 Visual1  [Mental nav training run ] Visual [Sequence learning runs]
+session 2: Visual1 Visual2 Visual1 Visual2 Visual1 Visual 2 [Sequence learning run] Mental [Mental Navigation test run]
+session 3: mental navigation test run
+
+option 3
 
 
 
