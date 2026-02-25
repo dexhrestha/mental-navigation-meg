@@ -67,7 +67,7 @@ else
 
     dlgtitle = 'Participant Information';
     dims = [1 40];
-    definput = {'0','Pilot0','20','2','0','1','1','1'};
+    definput = {'0','Pilot0','20','2','0','0','1','1'};
 
     answer = inputdlg(prompt, dlgtitle, dims, definput);
 
