@@ -2,7 +2,7 @@
 params.COHORT_DIR =  'pilot'; % cohort
 
 %% DEVELOPER variables
-params.DEV_MODE = true;
+params.DEV_MODE = false;
 params.BLOCK_RUN = false;
 
 target = "Keyboard"; % Keyboard;   % put part of the keyboard name here

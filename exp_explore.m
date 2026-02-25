@@ -57,7 +57,7 @@ else
 
     dlgtitle = 'Participant Information';
     dims = [1 40];
-    definput = {'0','Pilot0','20','2','0','1','1','1'};
+    definput = {'0','Pilot0','20','2','0','0','1','1'};
 
     answer = inputdlg(prompt, dlgtitle, dims, definput);
 
@@ -94,14 +94,13 @@ end
 
  
 %% Load trial structure mat file 
-load('trial_structure_input.mat','trials_df');
-trials_df_shuff = create_trial_structure(trials_df,params);
- 
-%trials_df_shuff = trials_df_shuff(1:5, :);
-
-trials_df_shuff = initialize_trials(trials_df_shuff);
-params.participant.direction = trials_df.direction(1) * -1 ; 
-
+% load('trial_structure_input.mat','trials_df');
+% trials_df_shuff = create_trial_structure(trials_df,params);
+% 
+% trials_df_shuff = trials_df_shuff(1:5, :);
+% 
+% trials_df_shuff = initialize_trials(trials_df_shuff);
+% params.participant.direction = trials_df.direction(1) * -1 ; 
 
 %% --------- INITIALIZE PTB ---------------------
 setup_psychtbx;
@@ -148,9 +147,13 @@ try
     spaceKey = KbName('b');
     escKey   = KbName('ESCAPE');
     
-    %% welcome screen
+    %% welcome screenb
     create_welcome_screen(params);
     
+    %% instruction screen
+    params.EXP_MODE = 'explore';
+    create_instruction_screen(params);
+
     %% Load images using PTB
     params = create_img_seq(250,1,params);
     params = create_navigation(1,params);
