@@ -16,14 +16,15 @@ function params = create_instruction_screen(params)
     
 
     if params.lang == 1
-        folderpath = fullfile('instructions' ,'ita');
+        folderpath = fullfile('instructions',params.EXP_MODE ,'ita','instructions');
     else
-        folderpath = fullfile('instructions' ,'eng');
+        folderpath = fullfile('instructions',params.EXP_MODE ,'eng','instructions');
     end
 
-    files  = dir(fullfile(folderpath,'*.PNG'));
+    files = dir(fullfile(folderpath,'*.JPG'));
+    
     filepaths = fullfile(folderpath,{files.name});
-   
+
     for idx = 1:length(filepaths)
          
         imgPath =   filepaths{idx};
@@ -31,41 +32,41 @@ function params = create_instruction_screen(params)
         if ~exist(imgPath,'file')
             error('Missing image file: %s', imgPath);
         else
+
         disp(imgPath);
+
         img = imread(imgPath);
-        text_img = Screen('MakeTexture', params.ptb.window, img);
-        % Draw welcome screen
-        Screen('FillRect', win, bg);
+        if size(img,3) == 4
+            img = img(:,:,1:3); % drop alpha to avoid invisibility
+        end
         
-        Screen('DrawTexture',win,text_img);
+        text_img = Screen('MakeTexture', win, img);
+        
+        Screen('FillRect', win, bg);
+        Screen('DrawTexture', win, text_img);
         
         if params.add_bars
-        Screen('FillRect', win, params.Bars.barColor, params.Bars.sideBarRects);
-        end 
+            Screen('FillRect', win, params.Bars.barColor, params.Bars.sideBarRects);
+        end
         
-        vbl = Screen('Flip', win);
-
-        % Flush any buffered keys before waiting
+        Screen('Flip', win);
+        
         KbQueueFlush(deviceIndex);
-    
-        % Wait for SPACE (or ESC)
         while true
             [pressed, firstPress] = KbQueueCheck(deviceIndex);
-    
             if pressed
                 if firstPress(escKey) > 0
+                    Screen('Close', text_img);
                     error('UserAbort:ESC', 'Experiment aborted by user');
                 elseif firstPress(respKey) > 0
                     break;
                 end
             end
-    
             WaitSecs(0.001);
         end
-    
-        % Debounce: flush to avoid SPACE carrying into the next screen
         KbQueueFlush(deviceIndex);
-        end
+        
+        Screen('Close', text_img); % IMPORTANT
 
     end
      

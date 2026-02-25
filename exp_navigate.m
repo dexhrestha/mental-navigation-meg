@@ -191,9 +191,10 @@ try
     % commandwindow;
     %% welcome screen
     create_welcome_screen(params);
-
+    
     
     %% instruction screen
+    params.EXP_MODE = 'navigate';
     create_instruction_screen(params);
   
     %% load trials
