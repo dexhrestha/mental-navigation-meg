@@ -53,7 +53,6 @@ __pycache__/
 # Data files (csv, xlsx)
 # ========================
 
-*.csv
 data/
 *.pptx
 *.mat
