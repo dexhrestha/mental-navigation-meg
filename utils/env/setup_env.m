@@ -37,7 +37,7 @@ params.categories = {
     'cow'
     'dog'
     'fox'
-    'mouse'
+    'bear'
     'rooster'
 };
 params.catImages = 3;

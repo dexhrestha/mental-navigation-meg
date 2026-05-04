@@ -7,7 +7,7 @@
 %                 run 'C:\Users\auditory_vo\Desktop\eyetrackerPsychtoolbox\Psychtoolbox_32\SetupPsychtoolbox.m';
                 run 'C:\Toolboxes\PTB\Psychtoolbox_matlab_2025_a_no_license\Psychtoolbox\SetupPsychtoolbox.m';
             elseif  params.iseye
-               run 'C:\Users\Eyelink\Desktop\Psychtoolbox_32\SetupPsychtoolbox.m'
+               run 'C:\toolbox\Psychtoolbox\SetupPsychtoolbox.m'
             else 
                 if params.DEV_MODE
                     run '/Applications/Psychtoolbox/SetupPsychtoolbox.m';
@@ -19,14 +19,15 @@
         if ~params.ismeg
             Screen('Preference', 'SkipSyncTests', 0); %SKIP SYNCH TEST
         else
-            Screen('Preference', 'SkipSyncTests', 0);
+            Screen('Preference', 'SkipSyncTests', 1);
         end
-
+        
         % Here we call some default settings for setting up Psychtoolbox
         PsychDefaultSetup(2);
         
         params.ptb =struct();
         % Get the screen numbers
+        
         screens = Screen('Screens');
 
         % Draw to the external screen if avaliable
@@ -38,15 +39,16 @@
         end
 
         %
+        
         params.ptb.BG_COLOR = [64 64 64];      % gray background
         params.ptb.FG_COLOR = [255 255 255];   % white foreground
-
         % Open an on screen window
         if params.DEV_MODE
             [params.ptb.window, params.ptb.windowRect] = Screen('OpenWindow', params.ptb.screenNumber , params.ptb.BG_COLOR, [0 0 800 600]);
         else
             [params.ptb.window, params.ptb.windowRect] = Screen('OpenWindow', params.ptb.screenNumber , params.ptb.BG_COLOR);
         end
+        Screen('ColorRange', params.ptb.window, 255);
 
         %set text size
         %if params.ismeg

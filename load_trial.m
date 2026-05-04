@@ -18,9 +18,9 @@ function [row,params] = load_trial(row,params)
    fprintf(' Run %d , Trial %d\n',params.runId,params.trialId);
    
     [row.blinkFixOnset,row.blinkFixOffset,row.blinkFixDa, params] = create_blink_fixation(params);
-    
+       
     if row.feedbackDur(1) > 0
-         
+        return
         [row.sampleOnset,row.sampleOffset,row.sampleDa,params] = create_sample(row.sampleDur(1),row.startId(1),row.targetCat(1),row.targetCatPos(1),row.targetId(1),params);
         movementDur = row.ts(1) + row.bufferDur(1);
         [row.movementOnset, row.movementOffset, row.movementDa, row.targetPos, row.tp, params] = create_movement(row.startId(1),row.targetId(1),row.speed(1),movementDur,row.visual(1),params);
@@ -45,7 +45,7 @@ function [row,params] = load_trial(row,params)
                 trigger_meg_send(params.triggers.MOV_END,0.005);
             end
             % if early stop show feedbacbk for 1 sec.
-            [row.feedbackOnset,row.feedbackOffset,row.feedbackDa,params] = create_feedback(1,params);
+            [row.feedbackOnset,row.feedbackOffset,row.feedbackDa,params] = create_feedback(1000,params); % pass feedback duration in ms
 
         end
     end
