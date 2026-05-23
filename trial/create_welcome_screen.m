@@ -11,8 +11,7 @@ function params = create_welcome_screen(params)
     end
 
     KbName('UnifyKeyNames');
-    respKey = KbName('b');
-    escKey   = KbName('ESCAPE');
+
     if params.lang == 1
         welcome_text = sprintf('Benvenuto all’esperimento\nPremi b per continuare\n(Premi ESC per uscire)');
     else
@@ -37,27 +36,23 @@ function params = create_welcome_screen(params)
         Screen('FillRect', win, params.Bars.barColor, params.Bars.sideBarRects);
     end 
 
-    vbl = Screen('Flip', win);  
+    Screen('Flip', win);  
 
     % Flush any buffered keys before waiting
     KbQueueFlush(deviceIndex);
 
     % Wait for SPACE (or ESC)
-    while true
-        [pressed, firstPress] = KbQueueCheck(deviceIndex);
-
-        if pressed
-            if firstPress(escKey) > 0
-                error('UserAbort:ESC', 'Experiment aborted by user');
-            elseif firstPress(respKey) > 0
-                break;
-            end
-        end
+    
+    
+    while true 
         
         WaitSecs(0.001);
-    end
 
-    % Debounce: flush to avoid SPACE carrying into the next screen
+        if  check_response(params,params.START_KEY)
+            break;
+        end
+    end 
+
     KbQueueFlush(deviceIndex);
 
 end

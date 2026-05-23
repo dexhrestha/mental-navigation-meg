@@ -1,4 +1,4 @@
-function [blinkFixOnset, blinkFixOffset, blinkFixDa, params] = create_blink_fixation(params)
+function [blinkFixOnset, blinkFixOffset, blinkFixDa,params] = create_blink_fixation(params)
 
 % Shows a red dot that blinks 3 times within blinkFixDur (ms).
 % Returns onset (first flip) and offset (final clear flip).
@@ -7,8 +7,7 @@ function [blinkFixOnset, blinkFixOffset, blinkFixDa, params] = create_blink_fixa
     bg  = params.ptb.BG_COLOR;
     
     xCenter = params.ptb.xCenter;
-    yCenter = params.ptb.yCenter;
-
+ 
     % Dot settings
     red = [255 0 0]; 
     green = [0 255 0];
@@ -23,15 +22,15 @@ function [blinkFixOnset, blinkFixOffset, blinkFixDa, params] = create_blink_fixa
     % ---------------------------
 
     % Define keys
-    KbName('UnifyKeyNames');
-    escKey = KbName('ESCAPE'); 
+    KbName('UnifyKeyNames'); 
     
     % Optional: start with dot ON
     startT = GetSecs;
     t = startT;
-
+    
     blinkFixOnset = NaN;
-    params.FIX_COLOR = red;
+    params.FIX_COLOR = red; 
+
     for p = 1:nPhases
         isOn = mod(p, 2) == 1;  % odd phases ON, even phases OFF
 
@@ -56,12 +55,16 @@ function [blinkFixOnset, blinkFixOffset, blinkFixDa, params] = create_blink_fixa
             phaseDur = params.BLINK_FIX_OFF_DUR;  % can draw from a unif distribution  for the second blink
             Screen('FillRect', win, bg);
         end
-
+        
+        params.star = drawHyperspaceStarfield(params,0);
+        
+        drawHUD(params);
+        
         if params.add_bars
             % In each draw frame:
             Screen('FillRect', win, params.Bars.barColor, params.Bars.sideBarRects);
         end 
-
+        
         flipTime = Screen('Flip', win);
 
         if isnan(blinkFixOnset)
@@ -77,18 +80,6 @@ function [blinkFixOnset, blinkFixOffset, blinkFixDa, params] = create_blink_fixa
         
         KbQueueFlush(params.kbdDeviceIndex); 
         
-        % if use wants to abort
-        while GetSecs < phaseEnd
-            [keyIsDown, pressTime, keyCode] = KbCheck(params.kbdDeviceIndex);
-
-            if keyIsDown
-                if keyCode(escKey)
-                    sca;
-                    error('UserAbort:ESC', 'Experiment aborted by user');
-                end
-            end
-        end
-
         % Advance absolute schedule (no drift)
         t = phaseEnd;
         blinkFixOffset = WaitSecs('UntilTime', t);

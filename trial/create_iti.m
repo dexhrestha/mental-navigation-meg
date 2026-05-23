@@ -12,11 +12,15 @@ function [itiOnset, itiOffset,itiDa,eyeStopTime, params] = create_iti(itiDur, pa
     win = params.ptb.window;
     bg  = params.ptb.BG_COLOR;
 
-    % 1) Start ITI visually
+    xCenter = params.ptb.xCenter;
+    yCenter = params.ptb.yCenter;
+    
+    % 1) Start ITI visually 
     Screen('FillRect', win, bg);
+
     if params.add_bars
         Screen('FillRect', win, params.Bars.barColor, params.Bars.sideBarRects);
-    end 
+    end
     
     itiOnset = Screen('Flip', win);
 
@@ -38,14 +42,40 @@ function [itiOnset, itiOffset,itiDa,eyeStopTime, params] = create_iti(itiDur, pa
     % 3) Wait only the remaining time
     target = itiOnset + itiDur;
     remainingTime = target - GetSecs;
-
-    if remainingTime > 0
-        itiOffset = WaitSecs('UntilTime', target);
-    else
-        itiOffset = GetSecs;  % already overran ITI
+    if remainingTime < 0
         remainingTime = 0;
     end
 
+    KbName('UnifyKeyNames'); 
+    ifi = Screen('GetFlipInterval', win);
+    speed = params.trial.speed;
+    blinkCycle = 0.5; % same toggle cadence basis as motion-linked phases
+    
+    while true
+        nowT = GetSecs;
+        elapsedSec = nowT - itiOnset;
+        phaseSlots = speed * elapsedSec;
+        showStart = mod(floor(phaseSlots / blinkCycle), 2) == 0;
+
+        Screen('FillRect', win, bg);
+        drawHUD(params);
+        if params.add_bars
+            Screen('FillRect', win, params.Bars.barColor, params.Bars.sideBarRects);
+        end
+        
+        if GetSecs > target && showStart
+            drawText(params,xCenter,yCenter,'PRESS START',params.TEXT_SIZE_PX,params.TEXT_COLOR);
+        end
+
+        itiOffset = Screen('Flip', win, nowT + 0.5 * ifi);
+
+       pressed = check_response(params,params.START_KEY);
+        
+        if pressed && GetSecs >= target
+            break;
+        end
+    end
+    
     % Optional: log
     % fprintf('ITI dur=%.3f, elapsed=%.3f, save=%.3f, wait=%.3f, overrun=%.3f\n', ...
     %     itiDur, elapsedSinceOnset, dataTransferTime, remainingTime, max(0, elapsedSinceOnset-itiDur));

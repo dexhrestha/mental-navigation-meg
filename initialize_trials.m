@@ -31,41 +31,47 @@ record the output
     
     empty = nan(n,1);
 
-    trials_df.speedCueOnset        = empty;
-    trials_df.speedCueOffset       = empty;
-    trials_df.speedCueDa           = empty;
-    trials_df.blinkFixOnset        = empty;
-    trials_df.blinkFixOffset       = empty;
-    trials_df.blinkFixDa           = empty;
-    trials_df.sampleOnset          = empty;
-    trials_df.sampleOffset         = empty;
-    trials_df.sampleDa             = empty;
-    trials_df.movementOnset        = empty;
-    trials_df.movementOffset       = empty;
-    trials_df.movementDa           = empty;
-    trials_df.probeOnset           = empty;
-    trials_df.probeOffset          = empty;
-    trials_df.probeDa              = empty;
-    trials_df.feedbackOnset        = empty;
-    trials_df.feedbackOffset       = empty;
-    trials_df.feedbackDa           = empty;
-    trials_df.itiOnset             = empty;
-    trials_df.itiOffset            = empty;
-    trials_df.itiDa                = empty;
+    trials_df.speed_cue_onset    = empty;
+    trials_df.speed_cue_offset   = empty;
+    trials_df.speed_cue_da       = empty;
+    
+    trials_df.blink_fix_onset    = empty;
+    trials_df.blink_fix_offset   = empty;
+    trials_df.blink_fix_da       = empty;
+    
+    trials_df.sample_onset       = empty;
+    trials_df.sample_offset      = empty;
+    trials_df.sample_da          = empty;
+    
+    trials_df.movement_onset     = empty;
+    trials_df.movement_offset    = empty;
+    trials_df.movement_da        = empty;
+    
+    trials_df.probe_onset        = empty;
+    trials_df.probe_offset       = empty;
+    trials_df.probe_da           = empty;
+    
+    trials_df.feedback_onset     = empty;
+    trials_df.feedback_offset    = empty;
+    trials_df.feedback_da        = empty;
+    
+    trials_df.iti_onset          = empty;
+    trials_df.iti_offset         = empty;
+    trials_df.iti_da             = empty;
 
     % Normal trials user resp
     trials_df.tp                     = empty;
     % Target position in sequence (can compute error vs achieved position later)
-    trials_df.targetPos              = empty;
+    trials_df.target_pos              = empty;
     %probe trials user resp
-    trials_df.probeRespKey           = empty;
-    trials_df.probeRespTime          = empty;
+    trials_df.probe_resp_key           = empty;
+    trials_df.probe_resp_time          = empty;
     
     %eye tracking
-    trials_df.eyeStartTime = empty;
-    trials_df.eyeStopTime = empty;
+    trials_df.eye_start_time = empty;
+    trials_df.eye_stop_time = empty;
     
     %meg 
-    trials_df.megStartTime = empty;
-    trials_df.megStopTime = empty;
+    trials_df.meg_start_time = empty;
+    trials_df.meg_stop_time = empty;
 end

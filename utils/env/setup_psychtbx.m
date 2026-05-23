@@ -17,7 +17,7 @@
         
         
         if ~params.ismeg
-            Screen('Preference', 'SkipSyncTests', 0); %SKIP SYNCH TEST
+            Screen('Preference', 'SkipSyncTests', 1); %SKIP SYNCH TEST
         else
             Screen('Preference', 'SkipSyncTests', 1);
         end
@@ -40,7 +40,7 @@
 
         %
         
-        params.ptb.BG_COLOR = [64 64 64];      % gray background
+        params.ptb.BG_COLOR = [25 25 25];      % gray background
         params.ptb.FG_COLOR = [255 255 255];   % white foreground
         % Open an on screen window
         if params.DEV_MODE

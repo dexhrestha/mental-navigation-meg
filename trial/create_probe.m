@@ -37,8 +37,7 @@ function [probeOnset, probeOffset, probeRespKey,probeRespTime,probeDa, params] =
     
     % Draw probe
     Screen('FillRect', win, bg);
-    Screen('DrawTexture', win, correctTex,   [], correctRect);
-    Screen('DrawTexture', win, incorrectTex, [], incorrectRect);
+   
 
     % IMPORTANT: flush queue right before timing starts, so RT is clean
     KbQueueFlush(deviceIndex);
@@ -57,6 +56,12 @@ function [probeOnset, probeOffset, probeRespKey,probeRespTime,probeDa, params] =
     probeResp.key  = 0;   % default: no response
     probeResp.t = -1;
     probeResp.rt = -1;
+    
+    
+    params.star = drawHyperspaceStarfield(params,0);
+    drawHUD(params);
+    Screen('DrawTexture', win, correctTex,   [], correctRect);
+    Screen('DrawTexture', win, incorrectTex, [], incorrectRect);
     
     if params.add_bars
         Screen('FillRect', win, params.Bars.barColor, params.Bars.sideBarRects);
@@ -100,12 +105,14 @@ function [probeOnset, probeOffset, probeRespKey,probeRespTime,probeDa, params] =
 
     
 
-     % Probe offset: 
+    % Probe offset 
     Screen('FillRect', win, bg);
-
+    params.star = drawHyperspaceStarfield(params,0);
+    drawHUD(params);
     if params.add_bars
         Screen('FillRect', win, params.Bars.barColor, params.Bars.sideBarRects);
     end 
+
     probeOffset = Screen('Flip', win, probeOnset + probeDur - 0.5*params.ptb.ifi);
 
     if isfield(probeResp,'key') && ~isempty(probeResp.key)

@@ -1,180 +1,190 @@
-function [speedCueOnset,speedCueOffset,speedCueDa] = create_speed_cue(speed,params)
-    speedCueDur = params.SPEED_CUE_DUR;
+function [speedCueOnset, speedCueOffset, speedCueDa, params] = create_speed_cue( params)
+
     
+
     win = params.ptb.window;
     bg  = params.ptb.BG_COLOR;
-    
-    color = params.TEXT_COLOR;       
-    
-    
+    color = params.TEXT_COLOR;
+
+    xCenter = params.ptb.xCenter;
+    yCenter = params.ptb.yCenter; 
+
+    ifi = Screen('GetFlipInterval', win);
+    speed = params.trial.speed;
+    %% --------------------------------------------------------------------
+    % Speed text
+    %% --------------------------------------------------------------------
     if params.lang == 1
-       
-        if speed == 1.2
-            
-            speed_text = 'LENTO';
-        else 
+
+        if speed == 2
             speed_text = 'VELOCE';
-        end
-        
-        if params.trial.visual
-            speed_text = strcat(speed_text,'\n','GIORNO');
-            
         else
-            speed_text = strcat(speed_text,'\n','NOTTE');
+            speed_text = 'LENTO';
         end
+
+        if params.trial.visual
+            speed_text = strcat(speed_text, '\n', 'GIORNO');
+        else
+            speed_text = strcat(speed_text, '\n', 'NOTTE');
+        end
+
     else
-        if speed == 1.2
-            speed_text = 'SLOW';
-        else 
+
+        if speed == 2
             speed_text = 'FAST';
-        end
-        
-        if params.trial.visual
-            speed_text = strcat(speed_text,'\n','DAY');
-            
         else
-            speed_text = strcat(speed_text,'\n','NIGHT');
+            speed_text = 'SLOW';
         end
-    end 
-    
-    
-    
-%% Move images for 2 complete loops
+
+        if params.trial.visual
+            speed_text = strcat(speed_text, '\n', 'DAY');
+        else
+            speed_text = strcat(speed_text, '\n', 'NIGHT');
+        end
+    end
+
+    %% --------------------------------------------------------------------
+    % Initialize carousel image order exactly like before
+    %% --------------------------------------------------------------------
     imgArr = 1:params.N_IMAGES;
     N = numel(imgArr);
-    startId = ceil(N/2) + 1;
-    % NOTE: This puts the center at index 10 (since N=18 has no true center)
-    centerIdx = ceil(N/2) + 1;
 
-    % Find current position of the start image ID
-    currIdx = find(imgArr == startId);
+    startId = ceil(N / 2) + 1;
+    centerIdx = ceil(N / 2) + 1;
 
-    % Circularly shift so startId appears at the center
+    currIdx = find(imgArr == startId, 1);
     shiftAmount = centerIdx - currIdx;
+
     params.trial.imgArrShifted = circshift(imgArr, shiftAmount);
 
-    %% --------------------------------------------------------------------
-    % Compute X positions relative to screen center
-    % Values are symmetric around 0 and spaced by 100 px
-    %% --------------------------------------------------------------------
-    params.trial.imgArrPos = ((1:N) - centerIdx) * (params.LM_WIDTH_PX + params.ILD_PX);
-    
-    xCenter = params.ptb.xCenter;
-    yCenter = params.ptb.yCenter;
-    
+    params.trial.imgArrPos = ((1:N) - centerIdx) * ...
+        (params.LM_WIDTH_PX + params.ILD_PX);
+
     n = numel(params.trial.imgArrPos);
-    Screen('BlendFunction', win, GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+    basePos = params.trial.imgArrPos(:)';
 
-    
-    % --- motion control: EXACTLY 100 px in 1 second ---
-    speedPxPerSec = speed * (params.LM_WIDTH_PX + params.ILD_PX);
-    ifi = Screen('GetFlipInterval', win);
-    dxPerFrame = speedPxPerSec * ifi;
-
-    % Base slot positions and spacing
-    basePos = params.trial.imgArrPos(:)';      % row vector
     baseSorted = sort(basePos);
     spacingPx = median(diff(baseSorted));
+
     if ~isfinite(spacingPx) || spacingPx <= 0
-        spacingPx = params.LM_WIDTH_PX*2; % fallback
+        spacingPx = params.LM_WIDTH_PX * 2;
     end
-    
+
+    %% --------------------------------------------------------------------
+    % Match movement-function motion scale
+    %% --------------------------------------------------------------------
+    speedPxPerSec = speed * spacingPx;
+    dxPerFrame = speedPxPerSec * ifi;
+
     offsetPx = 0;
-    movementDur = params.N_IMAGES/speed*params.SPEED_CUE_LOOPS;
+    traveledSlots = 0;
+
+    % Keep your existing cue-duration logic.
+    % If you want the cue to use params.SPEED_CUE_DUR instead, replace this
+    % line with: movementDur = speedCueDur;
+    movementDur = params.N_IMAGES / speed * params.SPEED_CUE_LOOPS;
+
+    %% --------------------------------------------------------------------
+    % PTB setup
+    %% --------------------------------------------------------------------
+    Screen('BlendFunction', win, GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
     Screen('TextSize', win, round(double(params.SPEED_TEXT_PX)));
-    % Draw speed text
-     DrawFormattedText( ...
-            win, ...
-            sprintf(speed_text), ...
-            'center', yCenter - params.SPEED_CUE_OFFSET_PX, ...
-            color ...
-        );
+    blinkCycle = 0.5; % toggle every half image-slot shift
+ 
+    if ~isfield(params, 'FIX_COLOR')
+        params.FIX_COLOR = [255 0 0];
+    end
 
-    % Flip to screen and get onset timestamp
+    yPos = yCenter - params.START_Y_PX;
+
+    %% --------------------------------------------------------------------
+    % Draw first frame before onset flip
+    %% --------------------------------------------------------------------
+    Screen('FillRect', win, bg);
+
+ 
+
+    DrawFormattedText( ...
+        win, ...
+        sprintf(speed_text), ...
+        'center', ...
+        yCenter - params.SPEED_CUE_OFFSET_PX, ...
+        color);
+
+    if params.add_bars
+        Screen('FillRect', win, params.Bars.barColor, params.Bars.sideBarRects);
+    end
+
     speedCueOnset = Screen('Flip', win);
-    
-    
+
     vbl = speedCueOnset;
-    endT = speedCueOnset+movementDur;
+
+    KbName('UnifyKeyNames');
+   
+    %% --------------------------------------------------------------------
+    % Main speed-cue loop
+    %% --------------------------------------------------------------------
     while true
-        if vbl >= endT
-            break;
-        end
 
-        % --- update smooth offset ---
-        offsetPx = offsetPx + dxPerFrame * params.participant.direction;
-
-        % --- rotate IDs when passing >= 1 slot ---
-        stepCount = round(offsetPx / spacingPx);  % trunc toward 0 (works for +/-)
-        if stepCount ~= 0
-            
-            offsetPx = offsetPx - stepCount * spacingPx;
-
-            % If direction feels reversed, flip sign here:
-            params.trial.imgArrShifted = circshift(params.trial.imgArrShifted, stepCount);
-            % params.trial.imgArrShifted = circshift(params.trial.imgArrShifted, -stepCount);
-        end
-
-        currPos = basePos + offsetPx;
-
-        % --- draw frame ---
         Screen('FillRect', win, bg);
 
-        for k = 1:n
-            xPos = xCenter + currPos(k);
-            yPos = yCenter - params.START_Y_PX;
+        %% Carousel update: match movement function
+        deltaPx = dxPerFrame * params.participant.direction;
+        offsetPx = offsetPx + deltaPx;
+        traveledSlots = traveledSlots + abs(deltaPx) / spacingPx;
 
-            dstRect = CenterRectOnPointd([0 0 params.LM_WIDTH_PX params.LM_HEIGHT_PX], xPos, yPos);
+        stepCount = fix(offsetPx / spacingPx);
 
-            currImgId = params.trial.imgArrShifted(k);
-            currCatImgId = mod(currImgId - 1, 3) + 1;
-            currCatId    = mod(floor((currImgId - 1) / 3), 6) + 1;
-
-            curTex = params.tex{currCatId, currCatImgId};
-            
-            dist = abs(currPos(k));   % because currPos is relative to center already
-
-            % choose a falloff radius (tune this)
-            fadeRadius = spacingPx * 2;   % e.g., fully visible within ~2 slots
-
-            % map distance -> alpha in [0..255]
-            alpha01 = 1 - min(dist / fadeRadius, 1);   % 1 at center, 0 far away
-%                 alpha   = round(255 * alpha01);
-
-            alpha01 = alpha01.^2;   % or ^3 for sharper center emphasis
-            alpha   = round(255 * alpha01);
-
-            % draw with per-image opacity
-            Screen('DrawTexture', win, curTex, [], dstRect, [], [], [], [255 255 255 alpha]);
-%             Screen('DrawTexture', win, curTex, [], dstRect);
-        
+        if stepCount ~= 0
+            offsetPx = offsetPx - stepCount * spacingPx;
+            params.trial.imgArrShifted = circshift( ...
+                params.trial.imgArrShifted, stepCount);
         end
+
+        currPos = basePos + offsetPx; 
+        loopReady = traveledSlots >= params.N_IMAGES;
+
+        %% Starfield
+        params.star.speed = (speedPxPerSec / params.star.focalLength) * 0.25;
+        params.star = drawHyperspaceStarfield(params);
+
+        %% Central carousel image presentation
+        drawImages( ...
+            win, params, currPos, spacingPx, xCenter, yPos, ...
+            n);
+
+        %% Fixation
+        drawFixation(params, xCenter, yPos);
         
-        
-            DrawFormattedText( ...
+
+         
+        %% Speed/day-night text overlay
+         
+
+        DrawFormattedText( ...
             win, ...
             sprintf(speed_text), ...
-            'center', yCenter - params.SPEED_CUE_OFFSET_PX, ...
-            color ...
-        );
-    
-       
+            'center', ...
+            yCenter - params.SPEED_CUE_OFFSET_PX, ...
+            color);
 
-        % --- synced flip ---
-
+        
+        %% HUD
+        drawHUD(params);
+        %% Optional side bars
         if params.add_bars
             Screen('FillRect', win, params.Bars.barColor, params.Bars.sideBarRects);
-        end 
- 
-        vbl = Screen('Flip', win, vbl + 0.5 * ifi);
-    
+        end
+
+        %% Flip
+        vbl = Screen('Flip', win, vbl + 0.5 * ifi); 
+
+        if loopReady 
+            break;
+        end
     end
 
-
-%% 
-%     fprintf('speedCueOnset %g at %g  \n', speed,speedCueOnset);
-%     fprintf('Wait for %g seconds\n', speedCueDur);
     speedCueOffset = vbl;
-    % fprintf('speedCueOffset %g\n',speedCueOffset)
     speedCueDa = speedCueOffset - speedCueOnset;
+
 end

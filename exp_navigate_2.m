@@ -8,16 +8,15 @@ clear;
 
 %% Run if ptb not working
 % currentFolder = pwd;
-% 
-% cd('/Applications/Psychtoolbox')
+% % 
+% cd('/Applications/toolbox/Psychtoolbox')
 % SetupPsychtoolbox
-% 
+% % 
 % cd(currentFolder)
-
 %% Clean ptb
 magic_cleanup = onCleanup(@ptb_cleanup);
 
-folders = {'input','instructions','trial','utils','animals'};
+folders = {'input','instructions','trial','utils','animals','assets','stim'};
 base_dir = pwd;
 
 for i = 1:numel(folders)
@@ -42,11 +41,10 @@ else
 end
 
 queueCreated = false;
-
 %% Collect participant input
 if params.DEV_MODE
-    params.subid = 0;
-    params.participant.name = '0';
+    params.subid = 1;
+    params.participant.name = '1';
     params.participant.age = 99;
     params.lang = 1;
     params.ismeg = 0;
@@ -67,7 +65,7 @@ else
 
     dlgtitle = 'Participant Information';
     dims = [1 40];
-    definput = {'0','Pilot0','20','2','0','0','1','1'};
+    definput = {'1','1','20','2','0','0','1','1'};
 
     answer = inputdlg(prompt, dlgtitle, dims, definput);
 
@@ -90,7 +88,8 @@ end
 t = datetime('now');
 params.dateTime = datestr(t, 'yyyy_mm_dd_HH_MM'); 
 %% read input file and convert it to mat for matlab to read
-pattern = sprintf('trial_structure_input_p%d*.csv', params.subid);
+% input path strucutre : 'subj-<label>/ses-<label>/input'
+pattern = sprintf('subj-%02d/ses-%02d/input.csv', params.subid,params.session);
 
 % List matching files
 files = dir(fullfile(INPUT_DIR, pattern));
@@ -103,7 +102,7 @@ elseif numel(files) > 1
 end
 
 % Full path to the file
-filePath = fullfile(INPUT_DIR, files(1).name);
+filePath = fullfile(files(1).folder, files(1).name);
 
 % Original name
 csvName = files(1).name;
@@ -117,7 +116,7 @@ matName = [name, '.mat'];
 % Read table
 trials_df = readtable(filePath);
 % Save to .mat file
-save(fullfile(INPUT_DIR,matName), 'trials_df');
+save(fullfile(files(1).folder,matName), 'trials_df');
 %% build output directory: subjid/session_date
 params.outDir = fullfile(OUTPUT_DIR,num2str(params.subid),num2str(params.session),params.dateTime); 
 params.beh_out_dir = fullfile(params.outDir,'beh');
@@ -145,10 +144,12 @@ params.participant.direction = trials_df.direction(1) * -1;
 
     
 if params.ismeg
+    disp('meg flag in');
     fprintf('Initialize MEG sys');
     trigger_meg_init;
     params.triggers = create_meg_triggers();
-    
+    [params.buttons, params.suppressor] = LV_init_response; 
+    disp('meg flag out');
 
 end 
 if params.add_bars
@@ -178,7 +179,8 @@ try
     end
 
 
-    %% keyboard queue (create/start for the SAME deviceIndex)
+    %% keyboard queue (create/start for th
+    %   e SAME deviceIndex)
     KbQueueCreate(deviceIndex);
     queueCreated = true;
     KbQueueStart(deviceIndex);
@@ -187,16 +189,45 @@ try
     KbName('UnifyKeyNames');
     respKey = KbName('b');
     escKey   = KbName('ESCAPE');
+    %% SETUP MEG BUTTONS
+    % Assuming box 1 is rd(1)/blu(8) & box 2 is grn(4)/ylw(2)
+    % Add this to dialog box
+    %RT dominant = 1; LT dominant = 2;
+    params.dominant = 1; % or 2 
+     
+    if params.dominant == 1
+        params.START_KEY = 8;    
+        params.LT_KEY = 2;
+        params.RT_KEY = 4;
     
-    % commandwindow;
-    %% welcome screen
+    elseif params.dominant == 2
+        params.START_KEY = 4;
+        params.LT_KEY = 8;
+        params.RT_KEY = 1;
+    
+    else
+        sca;
+        error('UserAbort:Esc', 'params.dominant Value should be 1 or 2');
+    end
+    
+    if ~params.ismeg
+        params.START_KEY = KbName('b');
+        params.LT_KEY = KbName('LeftArrow');
+        params.RT_KEY = KbName('RightArrow');
+        
+    end
+
+    %% Welcome screen
     create_welcome_screen(params);
     
     
-    %% instruction screen
+    %% Instruction screen
     params.EXP_MODE = 'navigate';
     create_instruction_screen(params);
-  
+   
+    %% setup stars
+    params = setup_stars(params);
+    params = setup_HUD(params);
     %% load trials
     params.blockId = 0;
     params.trialId = 0;
@@ -204,7 +235,7 @@ try
     % for each run 
     runs = unique(trials_df_shuff.run);
     
-    for r = 1:numel(runs)
+    for r = 1: numel(runs)
         run_id = runs(r);
         
         run_df = trials_df_shuff(trials_df_shuff.run == run_id, :);
@@ -224,8 +255,10 @@ try
 
                 WaitSecs(0.001);  % avoid 100% CPU
             end
+        
+        else
+            pressed = check_response(params,params.START_KEY);
         end
-
         if params.runId ~= run_id 
             params.runId = run_id;
         end 
@@ -237,7 +270,7 @@ try
             eye_calibration(eye,params)
         end
         
-        for i = 1 : height(run_df) 
+        for i = 1 :  height(run_df) 
             row =  run_df(i,:);
 
             if params.blockId ~= row.blockId(1)

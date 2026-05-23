@@ -11,7 +11,7 @@ magic_cleanup = onCleanup(@ptb_cleanup);
 %% Clean ptb
 magic_cleanup = onCleanup(@ptb_cleanup);
 
-folders = {'input','instructions','trial','utils','animals'};
+folders = {'input','instructions','trial','utils','animals','stim'};
 base_dir = pwd;
 
 for i = 1:numel(folders)

@@ -39,6 +39,7 @@ function [sampleOnset, sampleOffset,sampleDa, params] = create_sample(sampleDur,
     % Compute X positions relative to screen center
     % Values are symmetric around 0 and spaced by 100 px
     %% --------------------------------------------------------------------
+    % params.trial.imgArrPos = ((1:N) - centerIdx) * (params.LM_WIDTH_PX +   params.ILD_PX);
     params.trial.imgArrPos = ((1:N) - centerIdx) * (params.LM_WIDTH_PX +   params.ILD_PX);
     
  
@@ -73,11 +74,18 @@ function [sampleOnset, sampleOffset,sampleDa, params] = create_sample(sampleDur,
     %% --------------------------------------------------------------------
     Screen('FillRect', win, bg);
     Screen('BlendFunction', win, GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+    yPos = params.ptb.yCenter - params.START_Y_PX;
+    
+    params.star = drawHyperspaceStarfield(params,0);
     
     for k = 1:n
         % Horizontal placement based on params.trial.imgArrPos
-        xPos = params.ptb.xCenter + params.trial.imgArrPos(k);
-        yPos = params.ptb.yCenter - params.START_Y_PX;
+        if params.CENTRAL
+            xPos = params.ptb.xCenter;
+        else
+            xPos = params.ptb.xCenter + params.trial.imgArrPos(k);
+        end
+        
 
         % Destination rect for this image
         params.trial.rects{k} = CenterRectOnPointd( ...
@@ -99,14 +107,15 @@ function [sampleOnset, sampleOffset,sampleDa, params] = create_sample(sampleDur,
         dist = abs(params.trial.imgArrPos(k));
         % Draw image
         % choose a falloff radius (tune this)
-        fadeRadius = spacingPx * 2;   % e.g., fully visible within ~2 slots
+        fadeRadius = spacingPx ;   % e.g., fully visible within ~2 slots
 
         % map distance -> alpha in [0..255]
         alpha01 = 1 - min(dist / fadeRadius, 1);   % 1 at center, 0 far away
         alpha   = round(255 * alpha01);
         
-        alpha01 = alpha01.^2;   % or ^3 for sharper center emphasis
+        alpha01 = alpha01.^8;   % or ^3 for sharper center emphasis
         alpha   = round(255 * alpha01);
+        
         % draw with per-image opacity
         % left
         if params.participant.direction == 1 && params.trial.imgArrPos(k) <= 0 
@@ -121,6 +130,8 @@ function [sampleOnset, sampleOffset,sampleDa, params] = create_sample(sampleDur,
     %% --------------------------------------------------------------------
     % Draw target image and fixation dot
     %% --------------------------------------------------------------------
+    
+    
     Screen('DrawTexture', win, params.trial.targetTex, [], params.trial.targetRect);
 
     if ~isfield(params,'FIX_COLOR')
@@ -132,18 +143,55 @@ function [sampleOnset, sampleOffset,sampleDa, params] = create_sample(sampleDur,
     fixBounds = Screen('TextBounds', win, '+');
     fixRect   = CenterRectOnPointd(fixBounds, xCenter, fixY);
     Screen('DrawText', win, '+', fixRect(1), fixRect(2), params.FIX_COLOR);
+    
+    dstRect  = CenterRectOnPointd( ...
+            [0 0 params.LM_WIDTH_PX * 1.25 params.LM_HEIGHT_PX*1.25], ...
+            xCenter, fixY ...
+        );
+    
+    drawImgHUD(params);
+
 
     %% --------------------------------------------------------------------
     % Flip to show everything and record onset time
     %% --------------------------------------------------------------------
+    drawHUD(params);
     if params.add_bars
         Screen('FillRect', win, params.Bars.barColor, params.Bars.sideBarRects);
     end 
+    
     sampleOnset = Screen('Flip', win, [], 1); 
     %% --------------------------------------------------------------------
     % Hold stimulus for the requested duration
     %% --------------------------------------------------------------------
-    sampleOffset = WaitSecs('UntilTime', sampleOnset + sampleDur);
+    KbName('UnifyKeyNames');
+
+    params.trial.startPressed = 0;
+    sampleEnd = sampleOnset + sampleDur;
+
+    while GetSecs < sampleEnd
+        pressed = check_response(params,params.START_KEY);
+
+        if ~params.trial.startPressed && pressed ~= 0
+            params.trial.startPressed = pressed;
+        elseif params.trial.startPressed && pressed == 0
+            params.trial.startPressed = pressed;
+            break
+        end
+
+        % [keyIsDown, ~, keyCode] = KbCheck(params.kbdDeviceIndex);
+        % if keyIsDown && keyCode(escKey)
+        %     sca;
+        %     error('UserAbort:ESC', 'Experiment aborted by user');
+        % end
+        % if ~keyCode(respKey)
+        %     params.trial.sampleHoldBroken = true;
+        %     break;
+        % end
+        WaitSecs(0.001);
+    end
+
+    sampleOffset = GetSecs;
     %% --------------------------------------------------------------------
     % Clear screen and record offset time
     %% --------------------------------------------------------------------

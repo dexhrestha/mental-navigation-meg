@@ -33,41 +33,40 @@ function params = create_instruction_screen(params)
             error('Missing image file: %s', imgPath);
         else
 
-        disp(imgPath);
+            disp(imgPath);
+    
+            img = imread(imgPath);
+            if size(img,3) == 4
+                img = img(:,:,1:3); % drop alpha to avoid invisibility
+            end
+            
+            text_img = Screen('MakeTexture', win, img);
+            
+            Screen('FillRect', win, bg);
+            Screen('DrawTexture', win, text_img);
+            
+            if params.add_bars
+                Screen('FillRect', win, params.Bars.barColor, params.Bars.sideBarRects);
+            end
+            
+            Screen('Flip', win);
+            
+            KbQueueFlush(deviceIndex);
+            params.startPressed = 0;
 
-        img = imread(imgPath);
-        if size(img,3) == 4
-            img = img(:,:,1:3); % drop alpha to avoid invisibility
-        end
-        
-        text_img = Screen('MakeTexture', win, img);
-        
-        Screen('FillRect', win, bg);
-        Screen('DrawTexture', win, text_img);
-        
-        if params.add_bars
-            Screen('FillRect', win, params.Bars.barColor, params.Bars.sideBarRects);
-        end
-        
-        Screen('Flip', win);
-        
-        KbQueueFlush(deviceIndex);
-        while true
-            [pressed, firstPress] = KbQueueCheck(deviceIndex);
-            if pressed
-                if firstPress(escKey) > 0
-                    Screen('Close', text_img);
-                    error('UserAbort:ESC', 'Experiment aborted by user');
-                elseif firstPress(respKey) > 0
+            while true
+                
+                WaitSecs(0.001);
+                
+                if  check_response(params,params.START_KEY)
                     break;
                 end
             end
             WaitSecs(0.001);
+            KbQueueFlush(deviceIndex);
+            
+            Screen('Close', text_img); % IMPORTANT
         end
-        KbQueueFlush(deviceIndex);
-        
-        Screen('Close', text_img); % IMPORTANT
-
     end
      
 
