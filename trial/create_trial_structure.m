@@ -4,39 +4,18 @@ function trials_df_shuff = create_trial_structure(trials_df, params)
 % overwrite visual+speed for the first planned blocks while keeping original
 % speed for the remaining trials (Option B).
 
-    nTrials = height(trials_df);
-
-    %% ---------------- Shuffle trials within (run, blockId, speed) ----------------
-    G = findgroups(trials_df.run, trials_df.blockId, trials_df.speed);
-
-    rowIdxCell = splitapply(@(ix){ix(randperm(numel(ix)))}, (1:nTrials)', G);
-    rowIdx     = vertcat(rowIdxCell{:});
-
-    trials_df_shuff = trials_df(rowIdx, :);
-
-    %% ---------------- Reapply IDs within each run (sorted like pandas) ----------------
-    Grun = findgroups(trials_df_shuff.run);
-
-    tmp = splitapply(@(x){sort(x(:))}, trials_df_shuff.runTrialId, Grun);
-    trials_df_shuff.runTrialId = vertcat(tmp{:});
-
-    tmp = splitapply(@(x){sort(x(:))}, trials_df_shuff.runBlockId, Grun);
-    trials_df_shuff.runBlockId = vertcat(tmp{:});
 
     %% ---------------- Set trials with speed cue ----------------
-    n = height(trials_df_shuff);
-    trials_df_shuff.speedCueTrial = mod((0:n-1)', 6) == 0;
-    trials_df_shuff.speedCueTrial = int32(trials_df_shuff.speedCueTrial);
-
+    n = height(trials_df);
     %% ---------------- Session-specific assignments ----------------
     if params.session == 1
         % Keep original speed so we can restore it after the planned blocks
-        origSpeed = trials_df_shuff.speed;
+        origSpeed = trials_df.speed;
 
-        trials_df_shuff.visual = zeros(n, 1);
-        trials_df_shuff.speed  = nan(n, 1);   % NaN to catch anything unfilled
+        trials_df.visual = zeros(n, 1);
+        trials_df.speed  = nan(n, 1);   % NaN to catch anything unfilled
 
-        blockSize = 6;
+        blockSize = 9;
 
         % Each row: [isVisual, speed]
         % (Mental blocks = isVisual 0)
@@ -61,7 +40,6 @@ function trials_df_shuff = create_trial_structure(trials_df, params)
         
         % combine
         plan = [typeSeq(:) speedSeq(:)];
-
 
         nBlocks = size(plan, 1);
         totalPlanned = nBlocks * blockSize;

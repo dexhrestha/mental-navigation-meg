@@ -90,6 +90,8 @@ params.dateTime = datestr(t, 'yyyy_mm_dd_HH_MM');
 %% read input file and convert it to mat for matlab to read
 % input path strucutre : 'subj-<label>/ses-<label>/input'
 pattern = sprintf('subj-%02d/ses-%02d/input.csv', params.subid,params.session);
+% change to sub and remove above line later
+% pattern = sprintf('sub-%02d/ses-%02d/input.csv', params.subid,params.session);
 
 % List matching files
 files = dir(fullfile(INPUT_DIR, pattern));
@@ -116,7 +118,8 @@ matName = [name, '.mat'];
 % Read table
 trials_df = readtable(filePath);
 % Save to .mat file
-save(fullfile(files(1).folder,matName), 'trials_df');
+input_mat_path = fullfile(files(1).folder,matName);
+save(input_mat_path, 'trials_df');
 %% build output directory: subjid/session_date
 params.outDir = fullfile(OUTPUT_DIR,num2str(params.subid),num2str(params.session),params.dateTime); 
 params.beh_out_dir = fullfile(params.outDir,'beh');
@@ -130,14 +133,12 @@ if ~isfolder(params.outDir)
 end
 
 %% Load trial structure mat file 
-load(fullfile(INPUT_DIR,matName),'trials_df');
+load(input_mat_path,'trials_df');
 
-trials_df_shuff = create_trial_structure(trials_df,params);
  
-%trials_df_shuff = trials_df_shuff(1:5, :);
 
-trials_df_shuff = initialize_trials(trials_df_shuff);
-params.participant.direction = trials_df.direction(1) * -1; 
+trials_df = initialize_trials(trials_df);
+params.participant.direction = trials_df.direction(1);
 %% --------- INITIALIZE PTB ---------------------
  setup_psychtbx;
 %% --------- INITIALIZE EYELINK AND TTLs ---------------------
@@ -162,14 +163,16 @@ end
 %% Load trials using PTB
 try
     % read and save textures
-    nCats = numel(params.categories);
-    nImgs = params.catImages;
+    
 
-    params.tex = cell(nCats, nImgs);
+    params.tex = cell(params.n_categories, params.n_cat_images);
    
-    for catIdx = 1:nCats
-        for imgIdx = 1:nImgs
-            imgPath = fullfile('animals', sprintf('stim%d',params.subid) ,params.categories{catIdx}, sprintf('%d.png', imgIdx));
+    for catIdx = 1:params.n_categories
+        for imgIdx = 1:params.n_cat_images
+            imgPath = fullfile('stim',params.COHORT_DIR, ...
+                sprintf('sequence_%02d', params.subid), ...
+                sprintf('pos_%d_img%d.png', catIdx, imgIdx));  
+
             if ~exist(imgPath, 'file')
                 error('Missing image file: %s', imgPath);
             end
@@ -232,13 +235,13 @@ try
     params.blockId = 0;
     params.trialId = 0;
     params.runId = 0;
-    % for each run 
-    runs = unique(trials_df_shuff.run);
+    % for each run bb
+    runs = unique(trials_df.run);
     
     for r = 1: numel(runs)
         run_id = runs(r);
         
-        run_df = trials_df_shuff(trials_df_shuff.run == run_id, :);
+        run_df = trials_df(trials_df.run == run_id, :);
 
         % experiment starts the run by pressing spacebar
         if params.ismeg
@@ -273,11 +276,11 @@ try
         for i = 1 :  height(run_df) 
             row =  run_df(i,:);
 
-            if params.blockId ~= row.blockId(1)
-                params.blockId = row.blockId(1);
+            if params.blockId ~= row.block(1)
+                params.blockId = row.block(1);
             end 
 
-            params.trialId = row.runTrialId(1); 
+            params.trialId = row.trial(1); 
 
             [row,params] = load_trial(row, params);
 

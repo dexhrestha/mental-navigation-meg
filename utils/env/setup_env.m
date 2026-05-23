@@ -33,16 +33,14 @@ else
     params.BREAK_DUR = 60 ; % 60 seconds
 end
 %% read images categories
-params.N_IMAGES = 18;
-params.categories = {
-    'cat'
-    'cow'
-    'dog'
-    'fox'
-    'bear'
-    'rooster'
-};
-params.catImages = 3;
+
+T=readtable(fullfile('stim','category_sequences.csv'));
+row = T(T.subid==1,1:9);
+
+params.categories = table2array(row);
+params.n_categories = numel(params.categories);
+params.n_cat_images = 2;
+params.n_images = params.n_categories * params.n_cat_images;
 %%  LETTERS
 params.FONT_FAMILY = 'Arial';
 params.FONT_SIZE = 200;

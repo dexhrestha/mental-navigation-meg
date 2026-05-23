@@ -2,9 +2,10 @@ function [row,params] = load_trial(row,params)
     params.trial = struct();
     params.trial.speed = row.speed(1);
     params.trial.trialId = params.trialId;
-    params.trial.isProbe = row.feedbackDur(1) > 0;
+    params.trial.isProbe = row.probe_dur(1) > 0;
+    row.visual = 1;
     params.trial.visual = row.visual(1);
-    params.trial.targetId = row.targetId(1);
+    params.trial.targetId = row.target_id(1);
     % if params.trial.speed == 1.2
         % params.trial.speed = 1.6;
     % end
@@ -29,15 +30,15 @@ function [row,params] = load_trial(row,params)
 
     fprintf(' Run %d , Trial %d\n',params.runId,params.trialId);
     
-    [row.itiOnset,row.itiOffset,row.itiDa,row.eyeStopTime,params] = create_iti(row.itiDur(1),params);
+    [row.itiOnset,row.itiOffset,row.itiDa,row.eyeStopTime,params] = create_iti(row.iti_dur(1),params);
 
     [row.blinkFixOnset,row.blinkFixOffset,row.blinkFixDa, params] = create_blink_fixation(params);
  
 
        
-    if row.feedbackDur(1) > 0
+    if ~params.trial.isProbe 
         
-        [row.sampleOnset,row.sampleOffset,row.sampleDa,params] = create_sample(row.sampleDur(1),row.startId(1),row.targetCat(1),row.targetCatPos(1),row.targetId(1),params);
+        [row.sampleOnset,row.sampleOffset,row.sampleDa,params] = create_sample(row.sample_dur(1),row.start_id(1),row.targetCat(1),row.targetCatPos(1),row.targetId(1),params);
         [keyIsDown, ~, keyCode] = KbCheck(params.kbdDeviceIndex);
 
         if keyIsDown && keyCode(escKey)
@@ -45,18 +46,18 @@ function [row,params] = load_trial(row,params)
             error('UserAbort:ESC', 'Experiment aborted by user');
         end
         
-        movementDur = row.ts(1) + row.bufferDur(1);
+        movementDur = row.ts(1) + row.buffer_dur(1);
         [row.movementOnset, row.movementOffset, row.movementDa, row.targetPos, row.tp, params] = create_movement(row.startId(1),row.targetId(1),params.trial.speed,movementDur,row.visual(1),params);
         
         if params.ismeg                    
             trigger_meg_send(params.triggers.MOV_END,0.005);
         end
 
-        [row.feedbackOnset,row.feedbackOffset,row.feedbackDa,params] = create_feedback(row.feedbackDur(1),params);
+        [row.feedbackOnset,row.feedbackOffset,row.feedbackDa,params] = create_feedback(row.feedback_dur(1),params);
 
     else
         
-        [row.sampleOnset,row.sampleOffset,row.sampleDa,params] = create_sample(row.sampleDur(1),row.startId(1),row.targetCat(1),row.targetCatPos(1),row.targetId(1),params);
+        [row.sampleOnset,row.sampleOffset,row.sampleDa,params] = create_sample(row.sample_dur(1),row.startId(1),row.targetCat(1),row.targetCatPos(1),row.targetId(1),params);
         [keyIsDown, ~, keyCode] = KbCheck(params.kbdDeviceIndex);
 
         if keyIsDown && keyCode(escKey)
@@ -80,7 +81,7 @@ function [row,params] = load_trial(row,params)
                 trigger_meg_send(params.triggers.MOV_END,0.005);
             end
             % if early stop show feedbacbk for 1 sec.
-            [row.feedbackOnset,row.feedbackOffset,row.feedbackDa,params] = create_feedback(1000,params); % pass feedback duration in ms
+            [row.feedbackOnset,row.feedbackOffset,row.feedbackDa,params] = create_feedback(row.feedback_dur(1),params); % pass feedback duration in ms
 
         end
     end
