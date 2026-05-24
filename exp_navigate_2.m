@@ -47,8 +47,8 @@ if params.DEV_MODE
     params.participant.name = '1';
     params.participant.age = 99;
     params.lang = 1;
-    params.ismeg = 0;
-    params.iseye = 0;
+    params.is_meg = 0;
+    params.is_eye = 0;
     params.session = 1;
     params.add_bars = 1;
 else
@@ -79,14 +79,14 @@ else
     params.participant.name  = answer{2};
     params.participant.age   = str2double(answer{3});
     params.lang              = str2double(answer{4});
-    params.ismeg             = str2double(answer{5}); % no meg ttls in training
-    params.iseye             = str2double(answer{6});
+    params.is_meg             = str2double(answer{5}); % no meg ttls in training
+    params.is_eye             = str2double(answer{6});
     params.session           = str2double(answer{7});
     params.add_bars          = str2double(answer{8});
     
 end
-t = datetime('now');
-params.dateTime = datestr(t, 'yyyy_mm_dd_HH_MM'); 
+t = data_time('now');
+params.data_time = datestr(t, 'yyyy_mm_dd_HH_MM'); 
 %% read input file and convert it to mat for matlab to read
 % input path strucutre : 'subj-<label>/ses-<label>/input'
 pattern = sprintf('subj-%02d/ses-%02d/input.csv', params.subid,params.session);
@@ -121,7 +121,7 @@ trials_df = readtable(filePath);
 input_mat_path = fullfile(files(1).folder,matName);
 save(input_mat_path, 'trials_df');
 %% build output directory: subjid/session_date
-params.outDir = fullfile(OUTPUT_DIR,num2str(params.subid),num2str(params.session),params.dateTime); 
+params.outDir = fullfile(OUTPUT_DIR,num2str(params.subid),num2str(params.session),params.data_time); 
 params.beh_out_dir = fullfile(params.outDir,'beh');
 params.eye_out_dir = fullfile(params.outDir,'edf');
 params.meg_out_dir = fullfile(params.outDir,'meg');
@@ -140,11 +140,11 @@ load(input_mat_path,'trials_df');
 trials_df = initialize_trials(trials_df);
 params.participant.direction = trials_df.direction(1);
 %% --------- INITIALIZE PTB ---------------------
- setup_psychtbx;
+setup_psychtbx;
 %% --------- INITIALIZE EYELINK AND TTLs ---------------------
 
     
-if params.ismeg
+if params.is_meg
     disp('meg flag in');
     fprintf('Initialize MEG sys');
     trigger_meg_init;
@@ -156,7 +156,7 @@ end
 if params.add_bars
     params.Bars = create_meg_bars(params.ptb.window, params.SCREEN_WIDTH_PX, params.LM_HEIGHT_PX, [0 0 0]);
 end
-if params.iseye
+if params.is_eye
     [eye,params] = eye_init(params);
 end 
 
@@ -213,7 +213,7 @@ try
         error('UserAbort:Esc', 'params.dominant Value should be 1 or 2');
     end
     
-    if ~params.ismeg
+    if ~params.is_meg
         params.START_KEY = KbName('b');
         params.LT_KEY = KbName('LeftArrow');
         params.RT_KEY = KbName('RightArrow');
@@ -237,14 +237,14 @@ try
     params.runId = 0;
     % for each run bb
     runs = unique(trials_df.run);
-    
+    %% load each run and save data after each run
     for r = 1: numel(runs)
         run_id = runs(r);
         
         run_df = trials_df(trials_df.run == run_id, :);
 
         % experiment starts the run by pressing spacebar
-        if params.ismeg
+        if params.is_meg
             while true
                 [pressed, firstPress] = KbQueueCheck(deviceIndex);
 
@@ -269,7 +269,7 @@ try
         params.outFileName = sprintf('r%d', params.runId);
         % new run so do eye calibration and start recording 
         
-        if params.iseye            
+        if params.is_eye            
             eye_calibration(eye,params)
         end
         
@@ -299,7 +299,7 @@ try
         fprintf('Writing to file %s \n',matFile)
         save(matFile, 'run_df', 'params');
         
-        if params.ismeg            
+        if params.is_meg            
             trigger_meg_send(params.triggers.BRK_START,0.005);
         end
         
@@ -307,7 +307,7 @@ try
             create_break_screen(params);
         end 
 
-        if params.ismeg
+        if params.is_meg
             trigger_meg_send(params.triggers.BRK_END,0.005); 
         end
 

@@ -90,18 +90,6 @@ else
     main_dir = pwd; % use same folder if runningl locally
 end
 
-%% Load predefined matfiles for participants 
-
- 
-%% Load trial structure mat file 
-% load('trial_structure_input.mat','trials_df');
-% trials_df_shuff = create_trial_structure(trials_df,params);
-% 
-% trials_df_shuff = trials_df_shuff(1:5, :);
-% 
-% trials_df_shuff = initialize_trials(trials_df_shuff);
-% params.participant.direction = trials_df.direction(1) * -1 ; 
-
 %% --------- INITIALIZE PTB ---------------------
 setup_psychtbx;
 
