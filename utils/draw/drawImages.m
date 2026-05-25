@@ -13,12 +13,15 @@ function drawImages(win, params, currPos, spacingPx, xCenter, yPos, n)
             [0 0 params.LM_WIDTH_PX params.LM_HEIGHT_PX], ...
             xPos, yPos);
 
-        currImgId = params.trial.imgArrShifted(k);
-        currCatImgId = mod(currImgId - 1, 3) + 1;
-        currCatId = mod(floor((currImgId - 1) / 3), 6) + 1;
+        currImgId = params.trial(params.trialId).imgArrShifted(k);
+        nCats = size(params.tex, 1);
+        nCatImgs = size(params.tex, 2);
+        
+        currCatImgId = mod(currImgId - 1, nCatImgs) + 1;
+        currCatId = mod(floor((currImgId - 1) / nCatImgs), nCats) + 1;
 
         curTex = params.tex{currCatId, currCatImgId};
-
+        
         dist = abs(currPos(k));
 
         fadeRadius = spacingPx;

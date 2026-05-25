@@ -1,41 +1,31 @@
-function [blinkFixOnset, blinkFixOffset, blinkFixDa,params] = create_blink_fixation(params)
+function [blinkFixOnset, blinkFixOffset, blinkFixDa, params] = create_blink_fixation(params)
 
-% Shows a red dot that blinks 3 times within blinkFixDur (ms).
-% Returns onset (first flip) and offset (final clear flip).
-% Also records time of 'z' and '/' keypress (first press only).
+% Shows a blinking fixation and requires the start key to stay held.
     win = params.ptb.window;
     bg  = params.ptb.BG_COLOR;
-    
+
     xCenter = params.ptb.xCenter;
- 
-    % Dot settings
-    red = [255 0 0]; 
+
+    red = [255 0 0];
     green = [0 255 0];
 
-    % Timing: 3 blinks => 3 ON pulses. Use equal ON/OFF inside total duration.
     nBlinks = 2;
-    nPhases = 3 + nBlinks;                % ON,OFF,ON,OFF,ON
-%     phaseDur = blinkFixDur / nPhases;      % seconds per phase
+    nPhases = 3 + nBlinks;
 
-    % ---------------------------
-    % Response variables
-    % ---------------------------
+    KbName('UnifyKeyNames');
 
-    % Define keys
-    KbName('UnifyKeyNames'); 
-    
-    % Optional: start with dot ON
     startT = GetSecs;
     t = startT;
-    
+
     blinkFixOnset = NaN;
-    params.FIX_COLOR = red; 
+    blinkFixOffset = NaN;
+    params.FIX_COLOR = red;
 
     for p = 1:nPhases
-        isOn = mod(p, 2) == 1;  % odd phases ON, even phases OFF
+        isOn = mod(p, 2) == 1;
 
         if isOn
-            if p==nPhases
+            if p == nPhases
                 params.FIX_COLOR = green;
                 phaseDur = params.BLINK_FIX_GREEN_DUR;
             else
@@ -44,45 +34,48 @@ function [blinkFixOnset, blinkFixOffset, blinkFixDa,params] = create_blink_fixat
             end
 
             Screen('FillRect', win, bg);
-            
+
             Screen('TextSize', win, params.FIX_SIZE_PX);
             fixY = params.ptb.yCenter - params.START_Y_PX;
             fixBounds = Screen('TextBounds', win, '+');
-            fixRect   = CenterRectOnPointd(fixBounds, xCenter, fixY);
+            fixRect = CenterRectOnPointd(fixBounds, xCenter, fixY);
             Screen('DrawText', win, '+', fixRect(1), fixRect(2), params.FIX_COLOR);
-            
         else
-            phaseDur = params.BLINK_FIX_OFF_DUR;  % can draw from a unif distribution  for the second blink
+            phaseDur = params.BLINK_FIX_OFF_DUR;
             Screen('FillRect', win, bg);
         end
-        
-        params.star = drawHyperspaceStarfield(params,0);
-        
+
+        params.star = drawHyperspaceStarfield(params, 0);
         drawHUD(params);
-        
+
         if params.add_bars
-            % In each draw frame:
             Screen('FillRect', win, params.Bars.barColor, params.Bars.sideBarRects);
-        end 
-        
+        end
+
         flipTime = Screen('Flip', win);
 
         if isnan(blinkFixOnset)
-            blinkFixOnset = flipTime;  % first displayed frame timestamp
-        else
-            blinkFixOffset = flipTime;
+            blinkFixOnset = flipTime;
         end
 
-        % ---------------------------
-        % Collect keypresses during this phase
-        % ---------------------------
         phaseEnd = t + phaseDur;
-        
-        KbQueueFlush(params.kbdDeviceIndex); 
-        
-        % Advance absolute schedule (no drift)
+
+        while GetSecs < phaseEnd
+            pressed = check_response(params, params.START_KEY, 1);
+            params.trial(params.trialId).startPressed = pressed;
+
+            if ~pressed
+                blinkFixOffset = GetSecs;
+                blinkFixDa = blinkFixOffset - blinkFixOnset;
+                return;
+            end
+
+            WaitSecs(0.001);
+        end
+
         t = phaseEnd;
-        blinkFixOffset = WaitSecs('UntilTime', t);
+        blinkFixOffset = phaseEnd;
     end
+
     blinkFixDa = blinkFixOffset - blinkFixOnset;
 end

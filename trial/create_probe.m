@@ -1,4 +1,4 @@
-function [probeOnset, probeOffset, probeRespKey,probeRespTime,probeDa, params] = create_probe(probeCat,probeCatId,probeLoc,optionCat, params)
+function [probeOnset, probeOffset, probeRespKey,probeRespTime,probeDa, params] = create_probe(probeCat,probeCatId,probeLoc,optionCat,optionCatId, params)
 
     win = params.ptb.window;
     bg  = params.ptb.BG_COLOR;
@@ -12,8 +12,7 @@ function [probeOnset, probeOffset, probeRespKey,probeRespTime,probeDa, params] =
     else
         deviceIndex = [];  % fallback: PTB default keyboard
     end
-    
-    optionCatId = 2;
+     
     % if probeLoc is 1 set correctto right 
     if probeLoc == 1
         correct_params.xCenter = params.ptb.xCenter - params.CORRECT_OFFSET_PX;
@@ -30,8 +29,8 @@ function [probeOnset, probeOffset, probeRespKey,probeRespTime,probeDa, params] =
 
     incorrectRect = CenterRectOnPointd([0 0 params.LM_WIDTH_PX params.LM_HEIGHT_PX], ...
         incorrect_params.xCenter, yPos);
-    optionCat = mod(probeCat + optionCat - 1, 6) + 1;
-    incorrectTex  = params.tex{optionCat, optionCatId};
+    
+    incorrectTex  = params.tex{optionCat, probeCatId};
     
     sprintf('opt %d , probe %d',optionCat,probeCat);
     

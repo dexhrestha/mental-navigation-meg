@@ -1,13 +1,13 @@
-function [itiOnset, itiOffset,itiDa,eyeStopTime, params] = create_iti(itiDur, params)
+function [itiOnset, itiOffset,itiDa,eyeStopTime, params] = create_iti(iti_dur, params)
 % CREATE_ITI
-% Shows blank screen for itiDurMs milliseconds, while overlapping data saving.
+% Shows blank screen for iti_dur milliseconds, while overlapping data saving.
 %
 % Outputs:
 %   itiOnset           - time of flip
 %   itiOffset          - time when ITI ends (actual)
 %   dataTransferTime   - seconds spent saving during ITI
 %   remainingTime      - seconds waited after saving (can be 0)
-    itiDur = itiDur / 1000;  % ms -> s
+    iti_dur = iti_dur / 1000;  % ms -> s
 
     win = params.ptb.window;
     bg  = params.ptb.BG_COLOR;
@@ -26,10 +26,10 @@ function [itiOnset, itiOffset,itiDa,eyeStopTime, params] = create_iti(itiDur, pa
 
     % 2) Do the expensive work during ITI
     t0 = GetSecs;
-    if  params.iseye
+    if  params.is_eye
         eye_stopRecording(params.runId, params.blockId,params.trialId);
         eyeStopTime = GetSecs; 
-        eye_saveEDF(params, params.trial.edfFile);
+        eye_saveEDF(params, params.trial(params.trialId).edfFile);
     else
         eyeStopTime = NaN;
     end
@@ -40,7 +40,7 @@ function [itiOnset, itiOffset,itiDa,eyeStopTime, params] = create_iti(itiDur, pa
     elapsedSinceOnset = t1 - itiOnset;       % total elapsed in ITI so far
 
     % 3) Wait only the remaining time
-    target = itiOnset + itiDur;
+    target = itiOnset + iti_dur;
     remainingTime = target - GetSecs;
     if remainingTime < 0
         remainingTime = 0;
@@ -48,7 +48,7 @@ function [itiOnset, itiOffset,itiDa,eyeStopTime, params] = create_iti(itiDur, pa
 
     KbName('UnifyKeyNames'); 
     ifi = Screen('GetFlipInterval', win);
-    speed = params.trial.speed;
+    speed = params.trial(params.trialId).speed;
     blinkCycle = 0.5; % same toggle cadence basis as motion-linked phases
     
     while true
@@ -63,14 +63,15 @@ function [itiOnset, itiOffset,itiDa,eyeStopTime, params] = create_iti(itiDur, pa
             Screen('FillRect', win, params.Bars.barColor, params.Bars.sideBarRects);
         end
         
-        if GetSecs > target && showStart
+        if (GetSecs > target) &  showStart
             drawText(params,xCenter,yCenter,'PRESS START',params.TEXT_SIZE_PX,params.TEXT_COLOR);
         end
 
         itiOffset = Screen('Flip', win, nowT + 0.5 * ifi);
 
-       pressed = check_response(params,params.START_KEY);
-        
+       pressed = check_response(params,params.START_KEY,1);
+       params.trial(params.trialId).startPressed = pressed;
+
         if pressed && GetSecs >= target
             break;
         end
@@ -78,6 +79,6 @@ function [itiOnset, itiOffset,itiDa,eyeStopTime, params] = create_iti(itiDur, pa
     
     % Optional: log
     % fprintf('ITI dur=%.3f, elapsed=%.3f, save=%.3f, wait=%.3f, overrun=%.3f\n', ...
-    %     itiDur, elapsedSinceOnset, dataTransferTime, remainingTime, max(0, elapsedSinceOnset-itiDur));
+    %     iti_dur, elapsedSinceOnset, dataTransferTime, remainingTime, max(0, elapsedSinceOnset-iti_dur));
     itiDa = itiOffset - itiOnset;
 end

@@ -34,12 +34,12 @@ function params = setup_eye_env(params)
     % see notes.md for more details.
 
     % size of the fixation window to start the trial (2 degree visual angle)
-    % this is only used when flag.iseyetracker is true
+    % this is only used when flag.is_eyetracker is true
     params.eye.fixWinSizeSmallX = 49.28;
     params.eye.fixWinSizeSmallY = 49.61;
 
     % size of the fixation window during the trial (2 degree visual angle)
-    if params.ismeg
+    if params.is_meg
         % from the wiki
         % (https://wiki.cimec.unitn.it/tiki-index.php?page=VisualStimuliHwSetup)
         % the screen resolution is 1440x1080, screen ratio is 4:3 and whiteboard size is 51x38 cm

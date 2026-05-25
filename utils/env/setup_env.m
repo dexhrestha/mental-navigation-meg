@@ -34,13 +34,16 @@ else
 end
 %% read images categories
 
-T=readtable(fullfile('stim','category_sequences.csv'));
+T=readtable(fullfile('input',params.COHORT_DIR,'category_sequences.csv'));
 row = T(T.subid==1,1:9);
-
 params.categories = table2array(row);
 params.n_categories = numel(params.categories);
 params.n_cat_images = 2;
 params.n_images = params.n_categories * params.n_cat_images;
+
+%% add direction
+params.participant.direction = T{T.subid==1,10};
+
 %%  LETTERS
 params.FONT_FAMILY = 'Arial';
 params.FONT_SIZE = 200;
@@ -76,13 +79,16 @@ end
 %% SCREEN SETTINGS
 
 
-params.SCREEN_WIDTH_CM =    28.5;
+params.SCREEN_WIDTH_CM =    20.5;
+%% setup ptb
 
 %% add bars for meg
+ 
 if params.DEV_MODE
     params.SCREEN_WIDTH_PX = 600;
 else
-    params.SCREEN_WIDTH_PX = 1920;
+    params.SCREEN_WIDTH_PX  = 1600;
+    params.SCREEN_HEIGHT_PX = 1200;
 end
 
 params.VIEWING_DIST_CM = 75;

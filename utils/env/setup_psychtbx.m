@@ -3,20 +3,22 @@
     try
         %% setup psychotoolbox if screen not found
         if exist('Screen') ~=3
-            if params.ismeg
+            if params.is_meg
 %                 run 'C:\Users\auditory_vo\Desktop\eyetrackerPsychtoolbox\Psychtoolbox_32\SetupPsychtoolbox.m';
                 run 'C:\Toolboxes\PTB\Psychtoolbox_matlab_2025_a_no_license\Psychtoolbox\SetupPsychtoolbox.m';
-            elseif  params.iseye
+            elseif  params.is_eye
                run 'C:\toolbox\Psychtoolbox\SetupPsychtoolbox.m'
             else 
-                if params.DEV_MODE
-                    run '/Applications/Psychtoolbox/SetupPsychtoolbox.m';
-                end 
+                % if params.DEV_MODE
+                %     run 'C:\toolbox\Psychtoolbox\SetupPsychtoolbox.m';
+                % else
+                run ''C:\toolbox\Psychtoolbox\SetupPsychtoolbox.m'C:\toolbox\Psychtoolbox\SetupPsychtoolbox.m';
+                % end 
             end 
         end 
         
         
-        if ~params.ismeg
+        if ~params.is_meg
             Screen('Preference', 'SkipSyncTests', 1); %SKIP SYNCH TEST
         else
             Screen('Preference', 'SkipSyncTests', 1);
@@ -31,7 +33,7 @@
         screens = Screen('Screens');
 
         % Draw to the external screen if avaliable
-        if params.ismeg
+        if params.is_meg
             params.ptb.screenNumber = 1;
             params.ptb.screenNumber = max(screens);
         else
@@ -46,12 +48,12 @@
         if params.DEV_MODE
             [params.ptb.window, params.ptb.windowRect] = Screen('OpenWindow', params.ptb.screenNumber , params.ptb.BG_COLOR, [0 0 800 600]);
         else
-            [params.ptb.window, params.ptb.windowRect] = Screen('OpenWindow', params.ptb.screenNumber , params.ptb.BG_COLOR);
+            [params.ptb.window, params.ptb.windowRect] = Screen('OpenWindow', params.ptb.screenNumber , params.ptb.BG_COLOR, []);
         end
         Screen('ColorRange', params.ptb.window, 255);
 
         %set text size
-        %if params.ismeg
+        %if params.is_meg
         %   Screen('TextSize', window, 20);
         %elseif ismac
         %   Screen('TextSize', window, 20);
@@ -79,7 +81,7 @@
         Priority(topPriorityLevel);
         
         % hide mouse pointer
-        if params.ismeg || params.iseye
+        if params.is_meg || params.is_eye
             HideCursor(params.ptb.window)
         end
 

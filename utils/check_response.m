@@ -26,7 +26,7 @@ end
 % -----------------------
 % MEG INPUT
 % -----------------------
-if params.ismeg
+if params.is_meg
 
     Datapixx('RegWrRd');
 

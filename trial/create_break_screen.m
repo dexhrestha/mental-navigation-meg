@@ -42,7 +42,7 @@ function params = create_break_screen(params)
 %     KbQueueFlush(deviceIndex);
 
     % Wait for SPACE (or ESC)
-%     if params.ismeg || params.iseye
+%     if params.is_meg || params.is_eye
 %         while true
 %             [pressed, firstPress] = KbQueueCheck(deviceIndex);
 %     

@@ -24,29 +24,47 @@ function [sampleOnset, sampleOffset,sampleDa, params] = create_sample(sampleDur,
     imgArr = 1:18;
     N = numel(imgArr);
 
-    % NOTE: This puts the center at index 10 (since N=18 has no true center)
-    centerIdx = ceil(N/2) + 1;
+    % Use one explicit centre slot. For N = 18 there is no mathematically
+    % perfect middle item, so this chooses slot 10. The important point is
+    % that the same slot is used both for circshift and for imgArrPos = 0.
+    centerIdx = ceil(N / 2) + 1;
 
-    % Find current position of the start image ID
-    currIdx = find(imgArr == startId);
+    % Find current position of the start image ID.
+    currIdx = find(imgArr == startId, 1);
 
-    % Circularly shift so startId appears at the center
+    if isempty(currIdx)
+        error('create_sample:badStartId', ...
+            'startId %d was not found in imgArr.', startId);
+    end
+
+    % Circularly shift so startId appears at centerIdx.
     shiftAmount = centerIdx - currIdx;
-    params.trial.imgArrShifted = circshift(imgArr, shiftAmount);
-    
+    params.trial(params.trialId).imgArrShifted = circshift(imgArr, shiftAmount);
 
-    %% --------------------------------------------------------------------
-    % Compute X positions relative to screen center
-    % Values are symmetric around 0 and spaced by 100 px
-    %% --------------------------------------------------------------------
-    % params.trial.imgArrPos = ((1:N) - centerIdx) * (params.LM_WIDTH_PX +   params.ILD_PX);
-    params.trial.imgArrPos = ((1:N) - centerIdx) * (params.LM_WIDTH_PX +   params.ILD_PX);
-    
- 
-    spacingPx = params.LM_WIDTH_PX*2; 
+    % Verify where startId ended up after shifting. This index is then used
+    % to define the x-position array, guaranteeing that startId is exactly
+    % at xCenter / position 0.
+    startCenterIdx = find(params.trial(params.trialId).imgArrShifted == startId, 1);
 
-    n = numel(params.trial.imgArrPos);
-    params.trial.rects = cell(1, n);   % store destination params.trial.rects for all images
+    if isempty(startCenterIdx)
+        error('create_sample:shiftFailed', ...
+            'startId %d was not found after circshift.', startId);
+    end
+    
+    %% --------------------------------------------------------------------
+    % Compute X positions relative to screen center.
+    % The shifted startId is forced to position 0.
+    %% --------------------------------------------------------------------
+    spacingPx = params.LM_WIDTH_PX + params.ILD_PX;
+    params.trial(params.trialId).imgArrPos = ((1:N) - startCenterIdx) * spacingPx;
+
+    % Store diagnostics for checking alignment.
+    params.trial(params.trialId).sampleStartIdx = startCenterIdx;
+    params.trial(params.trialId).sampleStartPosPx = ...
+        params.trial(params.trialId).imgArrPos(startCenterIdx);
+
+    n = numel(params.trial(params.trialId).imgArrPos);
+    params.trial(params.trialId).rects = cell(1, n);   % store destination params.trial(params.trialId).rects for all images
 
     %% --------------------------------------------------------------------
     % PTB handles and colors
@@ -57,14 +75,14 @@ function [sampleOnset, sampleOffset,sampleDa, params] = create_sample(sampleDur,
     %% --------------------------------------------------------------------
     % Determine target image texture (category + image-within-category)
     %% --------------------------------------------------------------------
-    params.trial.targetTex = params.tex{targetCat, targetCatPos};
+    params.trial(params.trialId).targetTex = params.tex{targetCat, targetCatPos};
 
     %% --------------------------------------------------------------------
     % Layout parameters
     %% --------------------------------------------------------------------
 
     % Target image is drawn below the row
-    params.trial.targetRect = CenterRectOnPointd( ...
+    params.trial(params.trialId).targetRect = CenterRectOnPointd( ...
         [0 0 params.LM_WIDTH_PX params.LM_HEIGHT_PX], ...
         xCenter, yCenter + params.TARGET_Y_PX ...
     );
@@ -77,34 +95,36 @@ function [sampleOnset, sampleOffset,sampleDa, params] = create_sample(sampleDur,
     yPos = params.ptb.yCenter - params.START_Y_PX;
     
     params.star = drawHyperspaceStarfield(params,0);
+    nCats = size(params.tex, 1);
+    nCatImgs = size(params.tex, 2);
     
     for k = 1:n
-        % Horizontal placement based on params.trial.imgArrPos
+        % Horizontal placement based on params.trial(params.trialId).imgArrPos
         if params.CENTRAL
             xPos = params.ptb.xCenter;
         else
-            xPos = params.ptb.xCenter + params.trial.imgArrPos(k);
+            xPos = params.ptb.xCenter + params.trial(params.trialId).imgArrPos(k);
         end
         
 
         % Destination rect for this image
-        params.trial.rects{k} = CenterRectOnPointd( ...
+        params.trial(params.trialId).rects{k} = CenterRectOnPointd( ...
             [0 0 params.LM_WIDTH_PX params.LM_HEIGHT_PX], ...
             xPos, yPos ...
         );
 
         % Global image ID after shifting
-        currImgId = params.trial.imgArrShifted(k);
+        currImgId = params.trial(params.trialId).imgArrShifted(k);
 
         % Image index within category (1..3)
-        currCatImgId = mod(currImgId - 1, 3) + 1;
+        currCatImgId = mod(currImgId - 1, nCatImgs) + 1;
 
         % Category index (1..6), grouped in blocks of 3 images
-        currCatId = mod(floor((currImgId - 1) / 3), 6) + 1;
+        currCatId = mod(floor((currImgId - 1) / nCatImgs), nCats) + 1;
 
         % Retrieve preloaded texture
         curTex = params.tex{currCatId, currCatImgId};
-        dist = abs(params.trial.imgArrPos(k));
+        dist = abs(params.trial(params.trialId).imgArrPos(k));
         % Draw image
         % choose a falloff radius (tune this)
         fadeRadius = spacingPx ;   % e.g., fully visible within ~2 slots
@@ -118,12 +138,12 @@ function [sampleOnset, sampleOffset,sampleDa, params] = create_sample(sampleDur,
         
         % draw with per-image opacity
         % left
-        if params.participant.direction == 1 && params.trial.imgArrPos(k) <= 0 
-            Screen('DrawTexture', win, curTex, [], params.trial.rects{k}, [], [], [], [255 255 255 alpha]);
+        if params.participant.direction == 1 && params.trial(params.trialId).imgArrPos(k) <= 0 
+            Screen('DrawTexture', win, curTex, [], params.trial(params.trialId).rects{k}, [], [], [], [255 255 255 alpha]);
         end
         % right 
-        if params.participant.direction == -1 && params.trial.imgArrPos(k) >= 0 
-            Screen('DrawTexture', win, curTex, [], params.trial.rects{k}, [], [], [], [255 255 255 alpha]);
+        if params.participant.direction == -1 && params.trial(params.trialId).imgArrPos(k) >= 0 
+            Screen('DrawTexture', win, curTex, [], params.trial(params.trialId).rects{k}, [], [], [], [255 255 255 alpha]);
         end
     end
 
@@ -132,7 +152,7 @@ function [sampleOnset, sampleOffset,sampleDa, params] = create_sample(sampleDur,
     %% --------------------------------------------------------------------
     
     
-    Screen('DrawTexture', win, params.trial.targetTex, [], params.trial.targetRect);
+    Screen('DrawTexture', win, params.trial(params.trialId).targetTex, [], params.trial(params.trialId).targetRect);
 
     if ~isfield(params,'FIX_COLOR')
         params.FIX_COLOR = [0 255 0];
@@ -166,16 +186,16 @@ function [sampleOnset, sampleOffset,sampleDa, params] = create_sample(sampleDur,
     %% --------------------------------------------------------------------
     KbName('UnifyKeyNames');
 
-    params.trial.startPressed = 0;
+    params.trial(params.trialId).startPressed = 0;
     sampleEnd = sampleOnset + sampleDur;
 
     while GetSecs < sampleEnd
-        pressed = check_response(params,params.START_KEY);
+        pressed = check_response(params,params.START_KEY,1);
 
-        if ~params.trial.startPressed && pressed ~= 0
-            params.trial.startPressed = pressed;
-        elseif params.trial.startPressed && pressed == 0
-            params.trial.startPressed = pressed;
+        if ~params.trial(params.trialId).startPressed && pressed ~= 0
+            params.trial(params.trialId).startPressed = pressed;
+        elseif params.trial(params.trialId).startPressed && pressed == 0
+            params.trial(params.trialId).startPressed = pressed;
             break
         end
 
@@ -185,7 +205,7 @@ function [sampleOnset, sampleOffset,sampleDa, params] = create_sample(sampleDur,
         %     error('UserAbort:ESC', 'Experiment aborted by user');
         % end
         % if ~keyCode(respKey)
-        %     params.trial.sampleHoldBroken = true;
+        %     params.trial(params.trialId).sampleHoldBroken = true;
         %     break;
         % end
         WaitSecs(0.001);

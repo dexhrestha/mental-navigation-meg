@@ -1,123 +1,130 @@
-function [params] = create_img_seq(sampleDur,  startId, params)
-% CREATE_SAMPLE
-% Displays a row of images centered around the start image, plus a target image
-% and a fixation dot. All stimuli are shown for sampleDur milliseconds.
-%
-% Inputs:
-%   sampleDur  - duration in milliseconds
-%   startCat   - category index of start image (not used directly here)
-%   startId    - global image ID (1..18) used to center the array
-%   targetCat  - category index of target image
-%   targetId   - global image ID of target
-%   params     - struct containing window, textures, colors, layout params
-%
-% Outputs:
-%   sampleOnset  - timestamp of stimulus onset (Screen('Flip'))
-%   sampleOffset - timestamp of stimulus offset
+function [params] = create_img_seq(sampleDur, startId, params)
+% Display the initial image sequence using the same presentation style as
+% create_sample, without drawing a target image.
 
-    %% Convert duration to seconds
-    sampleDur = sampleDur / 1000;  % ms -> s
-     %% --------------------------------------------------------------------
-    % Build ordered image ID array and shift so startId is at the center
-    %% --------------------------------------------------------------------
-    imgArr = 1:18;
-    N = numel(imgArr);
+sampleDur = sampleDur / 1000;
 
-    % NOTE: This puts the center at index 10 (since N=18 has no true center)
-    centerIdx = ceil(N/2) + 1;
+xCenter = params.ptb.xCenter;
+yCenter = params.ptb.yCenter;
 
-    % Find current position of the start image ID
-    currIdx = find(imgArr == startId);
+imgArr = 1:params.n_images;
+N = numel(imgArr);
+centerIdx = ceil(N / 2) + 1;
 
-    % Circularly shift so startId appears at the center
-    shiftAmount = centerIdx - currIdx;
-    params.trial.imgArrShifted = circshift(imgArr, shiftAmount);
+currIdx = find(imgArr == startId, 1);
+shiftAmount = centerIdx - currIdx;
+params.trial(params.trialId).imgArrShifted = circshift(imgArr, shiftAmount);
 
-    %% --------------------------------------------------------------------
-    % Compute X positions relative to screen center
-    % Values are symmetric around 0 and spaced by 100 px
-    %% --------------------------------------------------------------------
-    params.trial.imgArrPos = ((1:N) - centerIdx) * (params.LM_WIDTH_PX +   params.ILD_PX);
+params.trial(params.trialId).imgArrPos = ...
+    ((1:N) - centerIdx) * (params.LM_WIDTH_PX + params.ILD_PX);
 
-    n = numel(params.trial.imgArrPos);
-    params.trial.rects = cell(1, n);   % store destination params.trial.rects for all images
+spacingPx = params.LM_WIDTH_PX * 2;
 
-    %% --------------------------------------------------------------------
-    % PTB handles and colors
-    %% --------------------------------------------------------------------
-    win = params.ptb.window;
-    bg  = params.ptb.BG_COLOR;
-    red = [255 0 0];
+nImgs = numel(params.trial(params.trialId).imgArrPos);
+params.trial(params.trialId).rects = cell(1, nImgs);
 
-    %% --------------------------------------------------------------------
-    % Determine target image texture (category + image-within-category)
-    %% --------------------------------------------------------------------
-%     targetCatImgId = mod(targetId - 1, 3) + 1;
+win = params.ptb.window;
+bg  = params.ptb.BG_COLOR;
 
-    %% --------------------------------------------------------------------
-    % Layout parameters
-    %% --------------------------------------------------------------------
+if ~isfield(params, 'star') || isempty(params.star)
+    params = setup_stars(params);
+end
 
-    [xCenter, yCenter] = RectCenter(Screen('Rect', win));
+if ~isfield(params, 'spaceship_HUD') || ...
+        ~isfield(params, 'startimg_HUD')
+    params = setup_HUD(params);
+end
 
+if ~isfield(params, 'FIX_COLOR')
+    params.FIX_COLOR = [0 255 0];
+end
 
-    %% --------------------------------------------------------------------
-    % Draw all start-array images
-    %% --------------------------------------------------------------------
-    Screen('FillRect', win, bg);
+Screen('FillRect', win, bg);
+Screen('BlendFunction', win, GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
-    for k = 1:n
-        % Horizontal placement based on params.trial.imgArrPos
-        xPos = xCenter + params.trial.imgArrPos(k);
-        yPos = yCenter - params.START_Y_PX;
+yPos = yCenter - params.START_Y_PX;
 
-        % Destination rect for this image
-        params.trial.rects{k} = CenterRectOnPointd( ...
-            [0 0 params.LM_WIDTH_PX params.LM_HEIGHT_PX], ...
-            xPos, yPos ...
-        );
+params.star = drawHyperspaceStarfield(params, 0);
 
-        % Global image ID after shifting
-        currImgId = params.trial.imgArrShifted(k);
+nCats = size(params.tex, 1);
+nCatImgs = size(params.tex, 2);
 
-        % Image index within category (1..3)
-        currCatImgId = mod(currImgId - 1, 3) + 1;
+direction = 0;
+if isfield(params, 'participant') && ...
+        isfield(params.participant, 'direction')
+    direction = params.participant.direction;
+end
 
-        % Category index (1..6), grouped in blocks of 3 images
-        currCatId = mod(floor((currImgId - 1) / 3), 6) + 1;
+for k = 1:nImgs
 
-        % Retrieve preloaded texture
-        curTex = params.tex{currCatId, currCatImgId};
-
-        % Draw image
-        Screen('DrawTexture', win, curTex, [], params.trial.rects{k});
+    if params.CENTRAL
+        xPos = xCenter;
+    else
+        xPos = xCenter + params.trial(params.trialId).imgArrPos(k);
     end
 
-    %% --------------------------------------------------------------------
-    % Draw target image and fixation dot
-    %% --------------------------------------------------------------------
-    
+    params.trial(params.trialId).rects{k} = CenterRectOnPointd( ...
+        [0 0 params.LM_WIDTH_PX params.LM_HEIGHT_PX], ...
+        xPos, yPos);
 
-    %% --------------------------------------------------------------------
-    % Flip to show everything and record onset time
-    %% --------------------------------------------------------------------
-    if params.add_bars
-        Screen('FillRect', win, params.Bars.barColor, params.Bars.sideBarRects);
-    end 
-    sampleOnset = Screen('Flip', win, [], 1);  % dontclear=1
-    % fprintf('sampleOnset at %g\n', sampleOnset);
-    % fprintf('Wait for %g s\n', sampleDur);
+    currImgId = params.trial(params.trialId).imgArrShifted(k);
+    currCatImgId = mod(currImgId - 1, nCatImgs) + 1;
+    currCatId = mod(floor((currImgId - 1) / nCatImgs), nCats) + 1;
 
-    %% --------------------------------------------------------------------
-    % Hold stimulus for the requested duration
-    %% --------------------------------------------------------------------
-    sampleOffset = WaitSecs('UntilTime', sampleOnset + sampleDur);
+    curTex = params.tex{currCatId, currCatImgId};
+    dist = abs(params.trial(params.trialId).imgArrPos(k));
 
-    %% --------------------------------------------------------------------
-    % Clear screen and record offset time
-    %% --------------------------------------------------------------------
-%     Screen('FillRect', win, bg);
-%      = Screen('Flip', win);
-    % fprintf('sampleOffset at %g\n', sampleOffset);
- 
+    alpha01 = 1 - min(dist / spacingPx, 1);
+    alpha = round(255 * (alpha01 ^ 8));
+
+    visible = ...
+        direction == 0 || ...
+        (direction == 1 && params.trial(params.trialId).imgArrPos(k) <= 0) || ...
+        (direction == -1 && params.trial(params.trialId).imgArrPos(k) >= 0);
+
+    if visible && alpha > 0
+        Screen('DrawTexture', ...
+            win, curTex, [], params.trial(params.trialId).rects{k}, ...
+            [], [], [], [255 255 255 alpha]);
+    end
+end
+
+drawImgHUD(params);
+
+Screen('TextSize', win, params.FIX_SIZE_PX);
+fixY = yCenter - params.START_Y_PX;
+fixBounds = Screen('TextBounds', win, '+');
+fixRect = CenterRectOnPointd(fixBounds, xCenter, fixY);
+Screen('DrawText', win, '+', fixRect(1), fixRect(2), params.FIX_COLOR);
+
+drawHUD(params);
+
+if params.add_bars
+    Screen('FillRect', win, params.Bars.barColor, params.Bars.sideBarRects);
+end
+
+params.trial(params.trialId).imgSeqOnset = Screen('Flip', win, [], 1);
+
+KbName('UnifyKeyNames');
+
+params.trial(params.trialId).startPressed = 0;
+sampleEnd = params.trial(params.trialId).imgSeqOnset + sampleDur;
+
+while GetSecs < sampleEnd
+    pressed = check_response(params, params.START_KEY);
+
+    if ~params.trial(params.trialId).startPressed && pressed ~= 0
+        params.trial(params.trialId).startPressed = pressed;
+    elseif params.trial(params.trialId).startPressed && pressed == 0
+        params.trial(params.trialId).startPressed = pressed;
+        break;
+    end
+
+    WaitSecs(0.001);
+end
+
+params.trial(params.trialId).imgSeqOffset = GetSecs;
+params.trial(params.trialId).imgSeqDa = ...
+    params.trial(params.trialId).imgSeqOffset - params.trial(params.trialId).imgSeqOnset;
+
 end

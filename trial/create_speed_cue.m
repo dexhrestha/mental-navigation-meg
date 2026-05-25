@@ -10,7 +10,7 @@ function [speedCueOnset, speedCueOffset, speedCueDa, params] = create_speed_cue(
     yCenter = params.ptb.yCenter; 
 
     ifi = Screen('GetFlipInterval', win);
-    speed = params.trial.speed;
+    speed = params.trial(params.trialId).speed;
     %% --------------------------------------------------------------------
     % Speed text
     %% --------------------------------------------------------------------
@@ -22,7 +22,7 @@ function [speedCueOnset, speedCueOffset, speedCueDa, params] = create_speed_cue(
             speed_text = 'LENTO';
         end
 
-        if params.trial.visual
+        if params.trial(params.trialId).visual
             speed_text = strcat(speed_text, '\n', 'GIORNO');
         else
             speed_text = strcat(speed_text, '\n', 'NOTTE');
@@ -36,7 +36,7 @@ function [speedCueOnset, speedCueOffset, speedCueDa, params] = create_speed_cue(
             speed_text = 'SLOW';
         end
 
-        if params.trial.visual
+        if params.trial(params.trialId).visual
             speed_text = strcat(speed_text, '\n', 'DAY');
         else
             speed_text = strcat(speed_text, '\n', 'NIGHT');
@@ -46,22 +46,22 @@ function [speedCueOnset, speedCueOffset, speedCueDa, params] = create_speed_cue(
     %% --------------------------------------------------------------------
     % Initialize carousel image order exactly like before
     %% --------------------------------------------------------------------
-    imgArr = 1:params.N_IMAGES;
+    imgArr = 1:params.n_images;
     N = numel(imgArr);
 
     startId = ceil(N / 2) + 1;
-    centerIdx = ceil(N / 2) + 1;
+    centerIdx = 1;
 
     currIdx = find(imgArr == startId, 1);
     shiftAmount = centerIdx - currIdx;
 
-    params.trial.imgArrShifted = circshift(imgArr, shiftAmount);
+    params.trial(params.trialId).imgArrShifted = circshift(imgArr, shiftAmount);
 
-    params.trial.imgArrPos = ((1:N) - centerIdx) * ...
+    params.trial(params.trialId).imgArrPos = ((1:N) - centerIdx) * ...
         (params.LM_WIDTH_PX + params.ILD_PX);
 
-    n = numel(params.trial.imgArrPos);
-    basePos = params.trial.imgArrPos(:)';
+    n = numel(params.trial(params.trialId).imgArrPos);
+    basePos = params.trial(params.trialId).imgArrPos(:)';
 
     baseSorted = sort(basePos);
     spacingPx = median(diff(baseSorted));
@@ -82,7 +82,7 @@ function [speedCueOnset, speedCueOffset, speedCueDa, params] = create_speed_cue(
     % Keep your existing cue-duration logic.
     % If you want the cue to use params.SPEED_CUE_DUR instead, replace this
     % line with: movementDur = speedCueDur;
-    movementDur = params.N_IMAGES / speed * params.SPEED_CUE_LOOPS;
+    movementDur = params.n_images / speed * params.SPEED_CUE_LOOPS;
 
     %% --------------------------------------------------------------------
     % PTB setup
@@ -137,12 +137,12 @@ function [speedCueOnset, speedCueOffset, speedCueDa, params] = create_speed_cue(
 
         if stepCount ~= 0
             offsetPx = offsetPx - stepCount * spacingPx;
-            params.trial.imgArrShifted = circshift( ...
-                params.trial.imgArrShifted, stepCount);
+            params.trial(params.trialId).imgArrShifted = circshift( ...
+                params.trial(params.trialId).imgArrShifted, stepCount);
         end
 
         currPos = basePos + offsetPx; 
-        loopReady = traveledSlots >= params.N_IMAGES;
+        loopReady = traveledSlots >= params.n_images;
 
         %% Starfield
         params.star.speed = (speedPxPerSec / params.star.focalLength) * 0.25;
